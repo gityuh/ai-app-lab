@@ -31,7 +31,7 @@
 ## 支持特性
 
 | 功能点                | 功能简介                                             |
-| ----------------------- | ------------------------------------------------------ |
+| --------------------- | ---------------------------------------------------- |
 | Prompt 渲染及模型调用 | 简化调用模型时，prompt渲染及模型调用结果处理的流程。 |
 | 插件调用              | 支持插件本地注册、插件管理及对接FC模型自动化调用。   |
 | Trace 监控            | 支持对接otel协议的trace管理及上报。                  |
@@ -39,7 +39,7 @@
 ## 应用列表
 
 | 应用名称                                                 | 应用简介                                                     |
-| ---------------------------------------------------------- | -------------------------------------------------------------- |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
 | [互动双语视频生成器](./demohouse/chat2cartoon/README.md) | 只需输入一个主题，就能为你生成引人入胜且富有含义的双语视频。 |
 | [视频实时理解](./demohouse/video_analyser/README.md)     | 多模态洞察，基于豆包-视觉理解模型实时视觉与语音理解。        |
 | [语音实时通话-青青](demohouse/live_voice_call/README.md) | 嗨，我是你的朋友乔青青，快来和我语音通话吧！                 |
@@ -54,9 +54,9 @@
    pip install arkitect --index-url https://pypi.org/simple
    ```
 
-2. 登陆[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default)，创建一个推理接入点（Endpoint），推荐使用Doubao-pro-32k [参考文档](https://www.volcengine.com/docs/82379/1399008#_2-%E5%88%9B%E5%BB%BA%E5%9C%A8%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8E%A5%E5%85%A5%E7%82%B9%EF%BC%88endpoint%EF%BC%89)
+2. 登录[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default)，创建一个推理接入点（Endpoint），推荐使用Doubao-pro-32k [参考文档](https://www.volcengine.com/docs/82379/1399008#_2-%E5%88%9B%E5%BB%BA%E5%9C%A8%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8E%A5%E5%85%A5%E7%82%B9%EF%BC%88endpoint%EF%BC%89)
 
-3. 登陆[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default)，创建一个 API KEY [参考文档](https://www.volcengine.com/docs/82379/1399008#_1-%E8%8E%B7%E5%8F%96%E5%B9%B6%E9%85%8D%E7%BD%AE-api-key)
+3. 登录[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default)，创建一个 API KEY [参考文档](https://www.volcengine.com/docs/82379/1399008#_1-%E8%8E%B7%E5%8F%96%E5%B9%B6%E9%85%8D%E7%BD%AE-api-key)
 
 4. 创建`main.py`，修改文件中的 endpoint_id 为您新创建的推理接入点 ID。
 
@@ -181,9 +181,9 @@ curl --location 'http://localhost:8080/api/v3/bots/chat/completions' \
    pip install arkitect --index-url https://pypi.org/simple
    ```
 
-2. 登陆[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default)，创建一个推理接入点（Endpoint），请选择带 Function-call 能力的模型，推荐使用doubao-pro-32k functioncall-241028 [参考文档](https://www.volcengine.com/docs/82379/1399008#_2-%E5%88%9B%E5%BB%BA%E5%9C%A8%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8E%A5%E5%85%A5%E7%82%B9%EF%BC%88endpoint%EF%BC%89)
+2. 登录[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default)，创建一个推理接入点（Endpoint），请选择带 Function-call 能力的模型，推荐使用doubao-pro-32k functioncall-241028 [参考文档](https://www.volcengine.com/docs/82379/1399008#_2-%E5%88%9B%E5%BB%BA%E5%9C%A8%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8E%A5%E5%85%A5%E7%82%B9%EF%BC%88endpoint%EF%BC%89)
 
-3. 登陆[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default)，创建一个 API KEY [参考文档](https://www.volcengine.com/docs/82379/1399008#_1-%E8%8E%B7%E5%8F%96%E5%B9%B6%E9%85%8D%E7%BD%AE-api-key)
+3. 登录[方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default)，创建一个 API KEY [参考文档](https://www.volcengine.com/docs/82379/1399008#_1-%E8%8E%B7%E5%8F%96%E5%B9%B6%E9%85%8D%E7%BD%AE-api-key)
 
 4. 创建`main.py`，修改文件中的 endpoint_id 为您新创建的推理接入点 ID。
 
