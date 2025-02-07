@@ -11,48 +11,97 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from typing import Awaitable, Callable, List
-
-from volcenginesdkarkruntime.types.chat import ChatCompletionMessageParam
-
-from arkitect.core.component.llm.model import (
-    ChatCompletionMessageToolCallParam,
-)
+import abc
+from typing import Any, Optional, Union
 
 from .model import State
 
-ChatHook = Callable[
-    [State, List[ChatCompletionMessageParam]],
-    Awaitable[List[ChatCompletionMessageParam]],
+
+class HookInterruptException(Exception):
+    def __init__(
+        self,
+        reason: str,
+        state: Optional[State] = None,
+        details: Optional[Any] = None,
+    ):
+        self.reason = reason
+        self.state = state
+        self.details = details
+
+
+class PreToolCallHook(abc.ABC):
+    @abc.abstractmethod
+    async def pre_tool_call(
+        self,
+        name: str,
+        arguments: str,
+        state: State,
+    ) -> State:
+        pass
+
+
+class PostToolCallHook(abc.ABC):
+    @abc.abstractmethod
+    async def post_tool_call(
+        self,
+        name: str,
+        arguments: str,
+        response: Any,
+        exception: Optional[Exception],
+        state: State,
+    ) -> State:
+        pass
+
+
+class PreLLMCallHook(abc.ABC):
+    @abc.abstractmethod
+    async def pre_llm_call(
+        self,
+        state: State,
+    ) -> State:
+        pass
+
+
+class PostLLMCallHook(abc.ABC):
+    @abc.abstractmethod
+    async def post_llm_call(
+        self,
+        state: State,
+    ) -> State:
+        pass
+
+
+Hook = Union[
+    PreToolCallHook,
+    PostToolCallHook,
+    PreLLMCallHook,
 ]
-ToolHook = Callable[
-    [State, ChatCompletionMessageToolCallParam],
-    Awaitable[ChatCompletionMessageToolCallParam],
-]
 
 
-async def default_chat_hook(
-    state: State, messages: List[ChatCompletionMessageParam]
-) -> List[ChatCompletionMessageParam]:
-    state.messages.extend(messages)
-    messages = state.messages
-    return messages
+class ApprovalHook(PreToolCallHook):
+    async def pre_tool_call(
+        self,
+        name: str,
+        arguments: str,
+        state: State,
+    ) -> State:
+        if len(state.messages) == 0:
+            return state
+        last_message = state.messages[-1]
+        if not last_message.get("tool_calls"):
+            return state
 
-
-async def default_context_chat_hook(
-    state: State, messages: List[ChatCompletionMessageParam]
-) -> List[ChatCompletionMessageParam]:
-    state.messages.extend(messages)
-    return messages
-
-
-async def approval_tool_hook(
-    state: State, parameter: ChatCompletionMessageToolCallParam
-) -> ChatCompletionMessageToolCallParam:
-    print(parameter)
-    y_or_n = input("input Y to approve\n")
-    if y_or_n == "Y":
-        return parameter
-    else:
-        raise ValueError("tool call parameters not approved")
+        formated_output = []
+        for tool_call in last_message.get("tool_calls"):
+            tool_name = tool_call.get("function", {}).get("name")
+            tool_call_param = tool_call.get("function", {}).get("arguments", "{}")
+            formated_output.append(
+                f"tool_name: {tool_name}\ntool_call_param: {tool_call_param}\n"
+            )
+        print("tool call parameters:")
+        print("".join(formated_output))
+        y_or_n = input("input Y to approve\n")
+        if y_or_n == "Y":
+            return state
+        else:
+            raise HookInterruptException(reason="approval failed", state=state)
