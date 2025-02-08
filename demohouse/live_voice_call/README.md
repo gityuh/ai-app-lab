@@ -36,8 +36,8 @@
 - Python 版本要求大于等于 3.8，小于 3.12
 - Node 18.0 或以上版本 
 - PNPM 8.10 或以上版本
-- 火山 TTS API access [参考文档](https://www.volcengine.com/docs/6561/163043)
-- 火山 ASR API access [参考文档](https://www.volcengine.com/docs/6561/163043)
+- 火山 TTS API access [参考文档](https://www.volcengine.com/docs/6561/163043) ，**仅对企业客户开放，您可以先完成企业实名认证后接入使用**
+- 火山 ASR API access [参考文档](https://www.volcengine.com/docs/6561/163043) ，**仅对企业客户开放，您可以先完成企业实名认证后接入使用**
 - 火山方舟 API KEY [参考文档](https://www.volcengine.com/docs/82379/1298459#api-key-%E7%AD%BE%E5%90%8D%E9%89%B4%E6%9D%83)
 - 火山引擎 AK SK [参考文档](https://www.volcengine.com/docs/6291/65568)
 - 创建 Doubao-Pro 32K 的endpoint [参考文档](https://www.volcengine.com/docs/82379/1099522)

@@ -28,7 +28,7 @@
 - Python 版本要求大于等于 3.8，小于 3.12
 - [Node.js](https://nodejs.org/) (版本 16.2.0 或更高，推荐 Node.js 18 的 LTS 版本)
 - 已获取火山方舟 API Key [参考文档](https://www.volcengine.com/docs/82379/1298459#api-key-%E7%AD%BE%E5%90%8D%E9%89%B4%E6%9D%83)
-- 火山语音技术相关准备工作
+- 火山语音技术相关准备工作，**仅对企业客户开放，您可以先完成企业实名认证后接入使用**
   - 已开通并创建**语音合成大模型**和**流式语音识别大模型**两个服务 [参照文档](https://www.volcengine.com/docs/6561/163043)
   - 已获取上述两个服务的 appid 和 token [参考文档](https://www.volcengine.com/docs/6561/1329505)
 - 已创建 Doubao-Vision-Pro 32K 的 endpoint  [参考文档](https://www.volcengine.com/docs/82379/1099522#594199f1)

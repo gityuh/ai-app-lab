@@ -35,6 +35,10 @@ export default defineConfig({
   output: {
     disableTsChecker: true,
   },
+  dev: {
+    https: true,
+    host: '0.0.0.0', // 允许局域网访问
+  },
   tools: {
     devServer: {
       proxy: {
