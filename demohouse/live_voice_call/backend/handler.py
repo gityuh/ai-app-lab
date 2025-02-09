@@ -11,13 +11,13 @@
 
 import asyncio
 import logging
-import sys
 import uuid
 from typing import AsyncIterable
 
 import websockets
 
 from arkitect.telemetry.logger import INFO
+from arkitect.utils.event_loop import get_event_loop
 from service import VoiceBotService
 from utils import *
 
@@ -117,8 +117,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    if sys.platform != "win32":
-        import uvloop
-        uvloop.run(main())
-    else:
-        asyncio.run(main())
+    get_event_loop(main())

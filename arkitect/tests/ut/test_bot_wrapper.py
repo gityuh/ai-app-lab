@@ -31,6 +31,7 @@ from arkitect.launcher.vefaas.wrapper import (
     parse_function_request,
     parse_function_response,
 )
+from arkitect.utils.event_loop import get_event_loop
 
 
 class TestBotWrapper(unittest.TestCase):
@@ -100,11 +101,7 @@ class TestBotWrapper(unittest.TestCase):
             )(self.handler)
             event, context = self.mock_event_context()
 
-            if sys.platform != "win32":
-                import uvloop
-                result = uvloop.run(wrapped_func(event, context))
-            else:
-                result = asyncio.run(wrapped_func(event, context))
+            result = get_event_loop(wrapped_func(event, context))
 
             mock_initialize.assert_called_once_with(
                 context, clients, False, None)
