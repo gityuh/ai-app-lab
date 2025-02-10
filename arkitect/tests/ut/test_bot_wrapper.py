@@ -14,6 +14,7 @@
 
 import asyncio
 import json
+import sys
 import unittest
 from typing import Any, AsyncIterator, Callable, Dict, Tuple, Type
 from unittest.mock import MagicMock, patch
@@ -30,6 +31,7 @@ from arkitect.launcher.vefaas.wrapper import (
     parse_function_request,
     parse_function_response,
 )
+from arkitect.utils.event_loop import get_event_loop
 
 
 class TestBotWrapper(unittest.TestCase):
@@ -98,9 +100,11 @@ class TestBotWrapper(unittest.TestCase):
                 trace_on=False,
             )(self.handler)
             event, context = self.mock_event_context()
-            result = asyncio.run(wrapped_func(event, context))
 
-            mock_initialize.assert_called_once_with(context, clients, False, None)
+            result = get_event_loop(wrapped_func(event, context))
+
+            mock_initialize.assert_called_once_with(
+                context, clients, False, None)
             mock_get_runner.assert_called_once_with(self.handler)
             mock_get_endpoint_config.assert_called_once_with(
                 endpoint_path="/api/v3/bots/chat/completions",
@@ -110,7 +114,8 @@ class TestBotWrapper(unittest.TestCase):
                 event=event,
                 request_cls=mock_get_endpoint_config.return_value.get.return_value,
             )
-            mock_parse_response.assert_called_once_with(status_code=200, content="{}")
+            mock_parse_response.assert_called_once_with(
+                status_code=200, content="{}")
             self.assertIsInstance(result, dict)
             self.assertEqual(result, {"key": "value"})
 
@@ -143,7 +148,8 @@ class TestBotWrapper(unittest.TestCase):
         endpoint_path = "/test"
         func = self.handler
 
-        result = parse_function_request(environment, parameters, endpoint_path, func)
+        result = parse_function_request(
+            environment, parameters, endpoint_path, func)
         self.assertIsInstance(result, Request)
 
     def test_parse_function_request_local_request_instance(self) -> None:
@@ -163,7 +169,8 @@ class TestBotWrapper(unittest.TestCase):
         endpoint_path = "/test"
         func = self.handler
 
-        result = parse_function_request(environment, parameters, endpoint_path, func)
+        result = parse_function_request(
+            environment, parameters, endpoint_path, func)
         self.assertIsInstance(result, Request)
 
     def test_parse_function_response_local_response(self) -> None:
