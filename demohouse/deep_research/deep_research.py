@@ -24,7 +24,7 @@ from arkitect.telemetry.logger import INFO
 
 from search_engine import SearchEngine
 from search_engine.volc_bot import VolcBotSearchEngine
-from prompt import DEFAULT_PLANNING_PROMPT, DEFAULT_SUMMARY_PROMPT
+from prompt import DEFAULT_PLANNING_PROMPT, DEFAULT_SUMMARY_PROMPT, INTENTION_PROMPT, INTENTION_QUERY_PROMPT
 from utils import get_current_date, cast_content_to_reasoning_content
 
 import re
@@ -60,6 +60,26 @@ class References(BaseModel):
         return output
 
 
+class ExtraConfig(BaseModel):
+    # if using independent intention model in planning
+    using_intention: bool = False
+    # the intention model endpoint_id
+    intention_endpoint_id: Optional[str] = None
+    # max_planning_rounds
+    max_planning_rounds: int = 5
+    # intention_template (will be activated if using_intention is True)
+    intention_template: Optional[Template] = None
+    # planning_template (prompt)
+    planning_template: Template = DEFAULT_PLANNING_PROMPT
+    # summary_template (prompt)
+    summary_template: Template = DEFAULT_SUMMARY_PROMPT
+
+    class Config:
+        """Configuration for this pydantic object."""
+
+        arbitrary_types_allowed = True
+
+
 """
 DeepResearch 
 """
@@ -67,22 +87,16 @@ DeepResearch
 
 class DeepResearch(BaseModel):
     search_engine: SearchEngine = Field(default_factory=VolcBotSearchEngine)
-    endpoint_id: str = Field(default_factory="")
-    planning_template: Template = DEFAULT_PLANNING_PROMPT
-    summary_template: Template = DEFAULT_SUMMARY_PROMPT
-    max_planning_rounds: int = 5
-
-    class Config:
-        """Configuration for this pydantic object."""
-
-        arbitrary_types_allowed = True
+    planning_endpoint_id: str = Field(default_factory="")
+    summary_endpoint_id: str = Field(default_factory="")
+    extra_config: ExtraConfig = Field(default_factory=ExtraConfig)
 
     async def arun_deep_research(self, request: ArkChatRequest, question: str) -> ArkChatResponse:
         references = References()
         buffered_reasoning_content = ""
 
         # 1. run reasoning
-        reasoning_stream = self.astream_reasoning(
+        reasoning_stream = self.astream_planning(
             request=request,
             question=question,
             references=references,
@@ -114,7 +128,7 @@ class DeepResearch(BaseModel):
         buffered_reasoning_content = ""
 
         # 1. stream reasoning
-        reasoning_stream = self.astream_reasoning(
+        reasoning_stream = self.astream_planning(
             request=request,
             question=question,
             references=references,
@@ -141,19 +155,26 @@ class DeepResearch(BaseModel):
         async for summary_chunk in summary_stream:
             yield summary_chunk
 
-    async def astream_reasoning(
+    async def astream_planning(
             self,
             request: ArkChatRequest,
             question: str,
             references: References
     ) -> AsyncIterable[ArkChatCompletionChunk]:
+
         planned_rounds = 0
-        while planned_rounds < self.max_planning_rounds:
+        while planned_rounds < self.extra_config.max_planning_rounds:
             planned_rounds += 1
 
+            if self.extra_config.using_intention:
+                # if using independent intention model, run intention check to determine continue or not
+                if not await self._intention_check(request=request, question=question, references=references):
+                    INFO("no need to search")
+                    break
+
             llm = BaseChatLanguageModel(
-                endpoint_id=self.endpoint_id,
-                template=CustomPromptTemplate(template=self.planning_template),
+                endpoint_id=self.planning_endpoint_id,
+                template=CustomPromptTemplate(template=self.extra_config.planning_template or DEFAULT_PLANNING_PROMPT),
                 messages=request.messages,
             )
 
@@ -184,9 +205,26 @@ class DeepResearch(BaseModel):
                 search_result = await self.search_engine.asearch(new_query)
                 references.add_reference(query=new_query, references=[search_result.raw_content])
 
+    async def _intention_check(self, request: ArkChatRequest, question: str, references: References) -> bool:
+        llm = BaseChatLanguageModel(
+            endpoint_id=self.extra_config.intention_endpoint_id,
+            template=CustomPromptTemplate(template=self.extra_config.intention_template),
+            messages=request.messages,
+        )
+
+        intention_response = await llm.arun(
+            reference=references.to_plaintext(),  # pass the search result to prompt template
+            question=question,
+            meta_info=f"当前时间：{get_current_date()}",
+        )
+
+        INFO(f"intention response: {intention_response}")
+
+        return '否' not in intention_response.choices[0].message.content
+
     async def arun_summary(self, request: ArkChatRequest, question: str, references: References) -> ArkChatResponse:
         llm = BaseChatLanguageModel(
-            endpoint_id=self.endpoint_id,
+            endpoint_id=self.summary_endpoint_id,
             template=CustomPromptTemplate(template=self.summary_template),
             messages=request.messages,
         )
@@ -200,8 +238,8 @@ class DeepResearch(BaseModel):
     async def astream_summary(self, request: ArkChatRequest, question: str, references: References) \
             -> AsyncIterable[ArkChatCompletionChunk]:
         llm = BaseChatLanguageModel(
-            endpoint_id=self.endpoint_id,
-            template=CustomPromptTemplate(template=self.summary_template),
+            endpoint_id=self.summary_endpoint_id,
+            template=CustomPromptTemplate(template=self.extra_config.summary_template or DEFAULT_SUMMARY_PROMPT),
             messages=request.messages,
         )
 
@@ -231,10 +269,17 @@ LOGGER = logging.getLogger(__name__)
 async def main():
     dr = DeepResearch(
         search_engine=VolcBotSearchEngine(
-            bot_id="{botID}",
-            api_key="{apiKey}"
+            bot_id="{YOUR_BOT_ID}",
+            api_key="{YOUR_API_KEY}"
         ),
-        endpoint_id="{epID}"
+        planning_endpoint_id="{PLANNING_EP_ID}",
+        summary_endpoint_id="{SUMMARY_EP_ID}",
+        # extra_config=ExtraConfig(
+        #     using_intention=True,
+        #     intention_endpoint_id="{INENTION_EP_ID}",
+        #     intention_template=INTENTION_PROMPT,
+        #     planning_template=INTENTION_QUERY_PROMPT,
+        # )
     )
 
     thinking = False

@@ -33,7 +33,8 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 ARK_API_KEY = "{YOUR_ARK_API_KEY}"
-REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
+PLANNING_EP_ID = "{PLANNING_ENDPOINT_ID}"
+SUMMARY_EP_ID = "{SUMMARY_ENDPOINT_ID}"
 TAVILY_API_KEY = "{YOUR_TAVILY_API_KEY}"
 SEARCH_BOT_ID = "{YOUR_BOT_ID}"
 
@@ -45,9 +46,10 @@ async def main(
     # using last_user_message as query
     last_user_message = get_last_message(request.messages, "user")
     deep_research = DeepResearch(
-        search_engine=VolcBotSearchEngine(bot_id=SEARCH_BOT_ID, api_key=ARK_API_KEY), # using volc bot as search engine
+        search_engine=VolcBotSearchEngine(bot_id=SEARCH_BOT_ID, api_key=ARK_API_KEY),  # using volc bot as search engine
         # search_engine=TavilySearchEngine(api_key=TAVILY_API_KEY), # using tavily as search engine
-        endpoint_id=REASONING_EP_ID,
+        planning_endpoint_id=PLANNING_EP_ID,
+        summary_endpoint_id=SUMMARY_EP_ID,
     )
 
     if request.stream:
