@@ -1,3 +1,14 @@
+# Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
+# Licensed under the 【火山方舟】原型应用软件自用许可协议
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     https://www.volcengine.com/docs/82379/1433703
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import asyncio
 import logging
 from typing import Dict, List, AsyncIterable
@@ -12,7 +23,6 @@ from arkitect.core.component.prompts import CustomPromptTemplate
 from arkitect.telemetry.logger import INFO
 
 from search_engine import SearchEngine
-from search_engine.mock import MockSearchEngine
 from search_engine.volc_bot import VolcBotSearchEngine
 from prompt import DEFAULT_PLANNING_PROMPT, DEFAULT_SUMMARY_PROMPT
 from utils import get_current_date, cast_content_to_reasoning_content
@@ -56,7 +66,7 @@ DeepResearch
 
 
 class DeepResearch(BaseModel):
-    search_engine: SearchEngine = Field(default_factory=MockSearchEngine)
+    search_engine: SearchEngine = Field(default_factory=VolcBotSearchEngine)
     endpoint_id: str = Field(default_factory="")
     planning_template: Template = DEFAULT_PLANNING_PROMPT
     summary_template: Template = DEFAULT_SUMMARY_PROMPT

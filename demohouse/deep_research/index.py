@@ -45,8 +45,8 @@ async def main(
     # using last_user_message as query
     last_user_message = get_last_message(request.messages, "user")
     deep_research = DeepResearch(
-        # search_engine=VolcBotSearchEngine(bot_id=SEARCH_BOT_ID, api_key=ARK_API_KEY),
-        search_engine=TavilySearchEngine(api_key=TAVILY_API_KEY),
+        search_engine=VolcBotSearchEngine(bot_id=SEARCH_BOT_ID, api_key=ARK_API_KEY), # using volc bot as search engine
+        # search_engine=TavilySearchEngine(api_key=TAVILY_API_KEY), # using tavily as search engine
         endpoint_id=REASONING_EP_ID,
     )
 
