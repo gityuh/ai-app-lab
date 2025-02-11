@@ -1,15 +1,20 @@
 import asyncio
 import openpyxl
 from arkitect.core.component.llm.model import ArkChatRequest, ArkMessage
-from deep_research import DeepResearch
+from deep_research import DeepResearch, ExtraConfig
+from prompt import INTENTION_PROMPT, INTENTION_QUERY_PROMPT
 from search_engine.volc_bot import VolcBotSearchEngine
 
-ARK_API_KEY = "{YOUR_ARK_API_KEY}"
-PLANNING_EP_ID = "{PLANNING_ENDPOINT_ID}"
-SUMMARY_EP_ID = "{SUMMARY_ENDPOINT_ID}"
-SEARCH_BOT_ID = "{YOUR_BOT_ID}"
+deepseek_enpoint = "<DEEPSEEK_EP>"
+doubao_endpoint = "<DOUBAO_EP>"
+ARK_API_KEY = "<YORUKEY>"
+SEARCH_BOT_ID = "bot-20250209103828-hcr48"
+DATASET_PATH = "./questionV2.xlsx"
 
-DATASET_PATH = "./dataset.xlsx"
+PLANNING_EP_ID = deepseek_enpoint
+SUMMARY_EP_ID = deepseek_enpoint
+INTENTION_EP_ID = doubao_endpoint
+
 
 async def get_answer(question):
     dr = DeepResearch(
@@ -19,23 +24,36 @@ async def get_answer(question):
         ),
         planning_endpoint_id=PLANNING_EP_ID,
         summary_endpoint_id=SUMMARY_EP_ID,
+        extra_config=ExtraConfig(
+            using_intention=True,
+            intention_endpoint_id=INTENTION_EP_ID,
+            intention_template=INTENTION_PROMPT,
+            planning_template=INTENTION_QUERY_PROMPT,
+        ),
     )
     print(question)
     result = ""
     thinking = False
     async for chunk in dr.astream_deep_research(
-            request=ArkChatRequest(
-                model="test", messages=[ArkMessage(role="user", content=question)]
-            ),
-            question=question,
+        request=ArkChatRequest(
+            model="test", messages=[ArkMessage(role="user", content=question)]
+        ),
+        question=question,
     ):
-        if chunk.choices[0].delta.reasoning_content:
+        if len(chunk.choices) == 0 and chunk.metadata.get("reference"):
+            print("\n----参考资料----\n")
+            result += "\n----搜索关键词----\n"
+            result += chunk.metadata.get("keyword")
+            print(chunk.metadata.get("keyword"))
+
+            print(chunk.metadata.get("reference"))
+        elif chunk.choices[0].delta.reasoning_content:
             if not thinking:
                 print("\n----思考过程----\n")
                 result += "\n----思考过程----\n"
                 thinking = True
             print(chunk.choices[0].delta.reasoning_content, end="")
-            result += chunk.choices[0].delta.reasoning_content
+            # result += chunk.choices[0].delta.reasoning_content
         elif chunk.choices[0].delta.content:
             if thinking:
                 print("\n----输出回答----\n")
@@ -43,6 +61,7 @@ async def get_answer(question):
                 thinking = False
             print(chunk.choices[0].delta.content, end="")
             result += chunk.choices[0].delta.content
+
     return result
 
 
@@ -96,6 +115,7 @@ async def main():
         sheet[f"M{row_idx}"] = ans2
         sheet[f"N{row_idx}"] = ans3
         workbook.save("eval-output.xlsx")
+        break
 
 
 if __name__ == "__main__":

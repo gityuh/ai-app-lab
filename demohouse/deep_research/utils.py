@@ -15,10 +15,27 @@ from typing import List
 from arkitect.core.component.llm.model import ArkMessage, ArkChatCompletionChunk
 
 
-def cast_content_to_reasoning_content(chunk: ArkChatCompletionChunk) -> ArkChatCompletionChunk:
+def cast_content_to_reasoning_content(
+    chunk: ArkChatCompletionChunk,
+) -> ArkChatCompletionChunk:
     new_chunk = ArkChatCompletionChunk(**chunk.__dict__)
     new_chunk.choices[0].delta.reasoning_content = chunk.choices[0].delta.content
     new_chunk.choices[0].delta.content = ""
+    return new_chunk
+
+
+def cast_reference_to_chunks(keyword: str, raw_content: str) -> ArkChatCompletionChunk:
+    new_chunk = ArkChatCompletionChunk(
+        id="",
+        object="chat.completion.chunk",
+        created=0,
+        model="",
+        choices=[],
+        metadata={
+            "reference": raw_content,
+            "keyword": keyword,
+        },
+    )
     return new_chunk
 
 
