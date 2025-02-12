@@ -5,6 +5,8 @@ header:
 
     paths:
       - 'arkitect/**/*.py'
+
+    comment: on-failure
   
   - license:
       spdx-id: Apache-2.0
@@ -33,3 +35,5 @@ header:
           - ".tsx"
           - ".ts"
         comment_style_id: DoubleSlash
+    
+    comment: on-failure
