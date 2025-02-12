@@ -5,6 +5,7 @@ header:
 
     paths:
       - 'arkitect/**/*.py'
+      - 'tests/**/*.py'
 
     comment: on-failure
   

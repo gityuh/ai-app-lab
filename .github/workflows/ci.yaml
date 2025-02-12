@@ -1,0 +1,35 @@
+name: VeScale Unit Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  Run-All-CI:
+    permissions:
+      contents: read
+      pull-requests: read
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install and configure Poetry
+        run: |
+          make poetry_install
+          poetry config virtualenvs.create false
+      - name: Install requirements
+        run: make install
+      - name: Lint
+        run: make lint
+      - name: Test
+        run: make test

@@ -21,3 +21,10 @@ build:
 
 clean:
 		rm -rf dist
+
+# Define a variable for the test file path.
+TEST_FILE ?= tests/ut/
+
+test:
+		poetry install --with test
+		poetry run pytest $(TEST_FILE)
