@@ -11,7 +11,7 @@
 
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 """
 search_result definition
@@ -19,6 +19,7 @@ search_result definition
 
 
 class SearchResult(BaseModel):
+    query: str = ""
     raw_content: Optional[str] = None
 
 
@@ -30,9 +31,9 @@ search_engine interface
 class SearchEngine(BaseModel, ABC):
 
     @abstractmethod
-    def search(self, query: str) -> SearchResult:
+    def search(self, queries: List[str]) -> List[SearchResult]:
         pass
 
     @abstractmethod
-    async def asearch(self, query: str) -> SearchResult:
+    async def asearch(self, queries: List[str]) -> List[SearchResult]:
         pass

@@ -11,6 +11,8 @@
 
 import asyncio
 from abc import ABC
+from typing import List
+
 from volcenginesdkarkruntime import AsyncArk
 from volcenginesdkarkruntime.types.bot_chat import BotChatCompletion
 
@@ -32,14 +34,20 @@ class VolcBotSearchEngine(SearchEngine, ABC):
         self._bot_id = bot_id
         self._ark_client = AsyncArk(api_key=api_key)
 
-    def search(self, query: str) -> SearchResult:
-        return asyncio.run(self.asearch(query))
+    def search(self, queries: List[str]) -> List[SearchResult]:
+        return asyncio.run(self.asearch(queries=queries))
 
-    async def asearch(self, query: str) -> SearchResult:
+    async def asearch(self, queries: List[str]) -> List[SearchResult]:
+        tasks = [self._single_search(query) for query in queries]
+        task_results = await asyncio.gather(*tasks)
+        return [
+            SearchResult(query=query, raw_content=result)
+            for query, result in zip(queries, task_results)
+        ]
+
+    async def _single_search(self, query: str) -> str:
         response = await self._run_bot_search(query)
-        return SearchResult(
-            raw_content=self._format_result(response)
-        )
+        return self._format_result(response)
 
     async def _run_bot_search(self, query: str) -> BotChatCompletion:
         return await self._ark_client.bot_chat.completions.create(
