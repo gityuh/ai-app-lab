@@ -54,7 +54,8 @@ class CallableFunction(Protocol):
         Any,
         Any,
         Union[Union[str, BaseModel], Union[str, BaseModel]],
-    ]: ...
+    ]:
+        ...
 
 
 class FunctionCallMode(str, Enum):
@@ -413,9 +414,9 @@ class ToolDetail(BaseModel):
 
 
 class BotUsage(BaseModel):
-    model_usage: Optional[List[CompletionUsage]] = Field(default_factory=list)
-    action_usage: Optional[List[ActionUsage]] = Field(default_factory=list)
-    action_details: Optional[List[ActionDetail]] = Field(default_factory=list)
+    model_usage: Optional[List[CompletionUsage]] = Field(default_factory=list)  # type: ignore
+    action_usage: Optional[List[ActionUsage]] = Field(default_factory=list)  # type: ignore
+    action_details: Optional[List[ActionDetail]] = Field(default_factory=list)  # type: ignore
 
     def __iadd__(self, others: Union[BotUsage, List[BotUsage]]) -> BotUsage:
         if not isinstance(others, list):

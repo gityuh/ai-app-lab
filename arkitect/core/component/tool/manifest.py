@@ -204,7 +204,7 @@ class ToolManifest(BaseModel):
         """
         return self.action_name + "/" + self.tool_name
 
-    def schema(self) -> ChatCompletionTool:
+    def tool_schema(self) -> ChatCompletionTool:
         """
         Returns the schema of the tool.
         """

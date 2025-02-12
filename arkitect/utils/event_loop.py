@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import asyncio
+import sys
 from typing import Any, Coroutine, TypeVar
 
 _T = TypeVar("_T")
@@ -23,6 +23,7 @@ def get_event_loop(func: Coroutine[Any, Any, _T], debug: bool = False) -> _T:
     # uvloop is unsupported for windows
     if sys.platform != "win32":
         import uvloop
+
         return uvloop.run(func, debug=debug)
     else:
         return asyncio.run(func, debug=debug)
