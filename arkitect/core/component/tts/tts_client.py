@@ -209,7 +209,7 @@ class AsyncTTSClient(AsyncBaseTTSClient):
             else:
                 yield TTSResponseChunk(event=response.event)
 
-    async def tts(
+    async def tts(  # type: ignore
         self,
         source: Union[
             AsyncIterable[Union[ArkChatCompletionChunk, ArkChatResponse, str]], str
@@ -237,7 +237,7 @@ class AsyncTTSClient(AsyncBaseTTSClient):
                         )
                     )
                 else:
-                    async for resp in text_stream:
+                    async for resp in text_stream:  # type: ignore
                         if isinstance(resp, ArkChatCompletionChunk):
                             text = resp.choices[0].delta.content
                         elif isinstance(resp, ArkChatResponse):

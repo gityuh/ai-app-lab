@@ -1,4 +1,4 @@
-name: VeScale Unit Tests
+name: Arkitect CI
 on:
   push:
     branches:
@@ -28,7 +28,7 @@ jobs:
           make poetry_install
           poetry config virtualenvs.create false
       - name: Install requirements
-        run: make install
+        run: make install_ci
       - name: Lint
         run: make lint
       - name: Test
