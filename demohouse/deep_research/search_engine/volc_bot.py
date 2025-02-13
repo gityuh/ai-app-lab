@@ -16,7 +16,7 @@ from typing import List
 from volcenginesdkarkruntime import AsyncArk
 from volcenginesdkarkruntime.types.bot_chat import BotChatCompletion
 
-from .search_engine import SearchEngine, SearchResult
+from .search_engine import SearchEngine, SearchResult, SearchReference
 
 """
 using volc bot (with search plugin) to search
@@ -41,13 +41,12 @@ class VolcBotSearchEngine(SearchEngine, ABC):
         tasks = [self._single_search(query) for query in queries]
         task_results = await asyncio.gather(*tasks)
         return [
-            SearchResult(query=query, raw_content=result)
-            for query, result in zip(queries, task_results)
+            result for result in task_results
         ]
 
-    async def _single_search(self, query: str) -> str:
+    async def _single_search(self, query: str) -> SearchResult:
         response = await self._run_bot_search(query)
-        return self._format_result(response)
+        return self._format_result(response, query)
 
     async def _run_bot_search(self, query: str) -> BotChatCompletion:
         return await self._ark_client.bot_chat.completions.create(
@@ -62,5 +61,16 @@ class VolcBotSearchEngine(SearchEngine, ABC):
         )
 
     @classmethod
-    def _format_result(cls, response: BotChatCompletion) -> str:
-        return response.choices[0].message.content
+    def _format_result(cls, response: BotChatCompletion, query: str) -> SearchResult:
+        return SearchResult(
+            query=query,
+            summary_content=response.choices[0].message.content,
+            search_references=[
+                SearchReference(
+                    site=r.site_name,
+                    url=r.url,
+                    content=r.summary,
+                    title=r.title,
+                ) for r in response.references
+            ]
+        )

@@ -22,31 +22,29 @@ from arkitect.core.component.llm.model import ArkMessage, ArkChatRequest, ArkCha
 from arkitect.core.component.prompts import CustomPromptTemplate
 from arkitect.telemetry.logger import INFO
 
-from search_engine import SearchEngine
+from search_engine import SearchEngine, SearchResult
 from search_engine.volc_bot import VolcBotSearchEngine
-from prompt import DEFAULT_PLANNING_PROMPT, DEFAULT_SUMMARY_PROMPT, INTENTION_PROMPT, INTENTION_QUERY_PROMPT
+from prompt import DEFAULT_PLANNING_PROMPT, DEFAULT_SUMMARY_PROMPT
 from utils import get_current_date, cast_content_to_reasoning_content
 
-import re
-
 """
-References is using to store the references searched so far
+ResultsSummary is using to store the result searched so far
 """
 
 
-class References(BaseModel):
+class ResultsSummary(BaseModel):
     """
     key: query
     values: list of searched references for this query
     """
-    ref_dict: Dict[str, List[str]] = Field(default_factory=dict)
+    ref_dict: Dict[str, List[SearchResult]] = Field(default_factory=dict)
 
-    def add_reference(self, query: str, references: List[str]) -> None:
+    def add_result(self, query: str, results: List[SearchResult]) -> None:
         if query not in self.ref_dict:
-            self.ref_dict[query] = references.copy()
+            self.ref_dict[query] = results.copy()
         else:
             extended_references = self.ref_dict.get(query, [])
-            extended_references.extend(references)
+            extended_references.extend(results)
             self.ref_dict[query] = extended_references
 
     def to_plaintext(self) -> str:
@@ -54,7 +52,7 @@ class References(BaseModel):
 
         for key, value in self.ref_dict.items():
             output += f"\n【查询 “{key}” 得到的相关资料】"
-            output += "\n".join(value)
+            output += "\n".join([v.summary_content for v in value])
 
         return output
 
@@ -66,6 +64,8 @@ class ExtraConfig(BaseModel):
     intention_endpoint_id: Optional[str] = None
     # max_planning_rounds
     max_planning_rounds: int = 5
+    # max_search_words
+    max_search_words: int = 5
     # intention_template (will be activated if using_intention is True)
     intention_template: Optional[Template] = None
     # planning_template (prompt)
@@ -91,7 +91,7 @@ class DeepResearch(BaseModel):
     extra_config: ExtraConfig = Field(default_factory=ExtraConfig)
 
     async def arun_deep_research(self, request: ArkChatRequest, question: str) -> ArkChatResponse:
-        references = References()
+        references = ResultsSummary()
         buffered_reasoning_content = ""
 
         # 1. run reasoning
@@ -123,7 +123,7 @@ class DeepResearch(BaseModel):
 
     async def astream_deep_research(self, request: ArkChatRequest, question: str) \
             -> AsyncIterable[ArkChatCompletionChunk]:
-        references = References()
+        references = ResultsSummary()
         buffered_reasoning_content = ""
 
         # 1. stream reasoning
@@ -158,7 +158,7 @@ class DeepResearch(BaseModel):
             self,
             request: ArkChatRequest,
             question: str,
-            references: References
+            references: ResultsSummary
     ) -> AsyncIterable[ArkChatCompletionChunk]:
 
         planned_rounds = 0
@@ -180,6 +180,7 @@ class DeepResearch(BaseModel):
             stream = llm.astream(
                 reference=references.to_plaintext(),  # pass the search result to prompt template
                 question=question,
+                max_search_words=self.extra_config.max_search_words,
                 meta_info=f"当前时间：{get_current_date()}"
             )
 
@@ -204,9 +205,9 @@ class DeepResearch(BaseModel):
                 search_results = await self.search_engine.asearch(new_queries)
                 INFO(f"search result: {search_results}")
                 for search_result in search_results:
-                    references.add_reference(query=search_result.query, references=[search_result.raw_content])
+                    references.add_result(query=search_result.query, results=[search_result])
 
-    async def _intention_check(self, request: ArkChatRequest, question: str, references: References) -> bool:
+    async def _intention_check(self, request: ArkChatRequest, question: str, references: ResultsSummary) -> bool:
         llm = BaseChatLanguageModel(
             endpoint_id=self.extra_config.intention_endpoint_id,
             template=CustomPromptTemplate(template=self.extra_config.intention_template),
@@ -223,7 +224,7 @@ class DeepResearch(BaseModel):
 
         return '否' not in intention_response.choices[0].message.content
 
-    async def arun_summary(self, request: ArkChatRequest, question: str, references: References) -> ArkChatResponse:
+    async def arun_summary(self, request: ArkChatRequest, question: str, references: ResultsSummary) -> ArkChatResponse:
         llm = BaseChatLanguageModel(
             endpoint_id=self.summary_endpoint_id,
             template=CustomPromptTemplate(template=self.summary_template),
@@ -236,7 +237,7 @@ class DeepResearch(BaseModel):
             meta_info=f"当前时间：{get_current_date()}"
         )
 
-    async def astream_summary(self, request: ArkChatRequest, question: str, references: References) \
+    async def astream_summary(self, request: ArkChatRequest, question: str, references: ResultsSummary) \
             -> AsyncIterable[ArkChatCompletionChunk]:
         llm = BaseChatLanguageModel(
             endpoint_id=self.summary_endpoint_id,
@@ -277,7 +278,10 @@ async def main():
         ),
         planning_endpoint_id="{}",
         summary_endpoint_id="{}",
-        extra_config=ExtraConfig(max_planning_rounds=10)
+        extra_config=ExtraConfig(
+            max_planning_rounds=10,
+            max_search_words=10,
+        )
         # extra_config=ExtraConfig(
         #     using_intention=True,
         #     intention_endpoint_id="{INTENTION_EP_ID}",
