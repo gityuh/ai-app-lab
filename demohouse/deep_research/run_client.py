@@ -7,17 +7,17 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.s
+# limitations under the License.
 
-from volcenginesdkarkruntime import Ark
+from openai import OpenAI
 
-client = Ark(base_url="http://localhost:8888/api/v3")
+client = OpenAI(base_url="http://localhost:8888/api/v3/bots", api_key="{API_KEY}")
 
 
 def main():
     # stream run
     stream_resp = client.chat.completions.create(
-        model="ep-1234",  # useless, only for validation
+        model="test",
         messages=[
             {
                 "role": "user",

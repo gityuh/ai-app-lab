@@ -11,7 +11,7 @@
 
 import asyncio
 from abc import ABC
-from typing import List
+from typing import List, Optional
 
 from volcenginesdkarkruntime import AsyncArk
 from volcenginesdkarkruntime.types.bot_chat import BotChatCompletion
@@ -27,8 +27,8 @@ class VolcBotSearchEngine(SearchEngine, ABC):
 
     def __init__(
             self,
-            api_key: str,
             bot_id: str,
+            api_key: Optional[str] = None,
     ):
         super().__init__()
         self._bot_id = bot_id
