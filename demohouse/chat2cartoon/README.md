@@ -33,12 +33,16 @@
 
 - Python 版本要求大于等于 3.8，小于 3.12
 - Poetry 1.6.1 版本 [参考文档](https://python-poetry.org/docs/#installing-with-the-official-installer)
-- 火山语音技术（TTS）相关准备工作
-    - 已开通并创建**语音合成大模型**和**流式语音识别大模型**两个服务 [参照文档](https://www.volcengine.com/docs/6561/163043)
-    - 已获取上述两个服务的 appid 和 token [参考文档](https://www.volcengine.com/docs/6561/1329505)
+- Node 版本要求大于等于 16.2.0
+- 火山语音技术相关准备工作，**仅对企业客户开放，您可以先完成企业实名认证后接入使用**
+  - 已创建一个**语音服务**的应用 [创建链接](https://console.volcengine.com/speech/app)
+  - 对该应用已开通**语音合成大模型**和**流式语音识别大模型**两个服务 [参照文档](https://www.volcengine.com/docs/6561/163043)
+    - 注意：**语音合成大模型**从开通到可以使用有大概5-10分钟延迟
+  - 已获取上述两个服务的 APP ID 和 Access Token [参考文档](https://www.volcengine.com/docs/6561/1329505)
 - 火山方舟 API KEY [参考文档](https://www.volcengine.com/docs/82379/1298459#api-key-%E7%AD%BE%E5%90%8D%E9%89%B4%E6%9D%83)
 - 火山引擎 AK SK [参考文档](https://www.volcengine.com/docs/6291/65568)
 - 火山 TOS 桶 [参考文档](https://www.volcengine.com/docs/6349/74830)
+- 火山 TOS 桶配置跨域 [参考文档](https://www.volcengine.com/docs/6349/75033)
 - 火山方舟文本生成模型，视觉理解模型和视频生成模型接入点 [参考文档](https://www.volcengine.com/docs/82379/1099522)
 
 ## 快速开始
@@ -67,6 +71,8 @@
    | VLM_ENDPOINT_ID     | 最终视频影片交互，调用的视觉理解大模型接入点 ID             |
    | CGT_ENDPOINT_ID     | 生视频大模型接入点 ID（暂时只支持 Doubao-视频生成模型）     |
 
+    > LLM_ENDPOINT_ID 必须使用 Doubao-pro-32k 的接入点，否则项目效果会不稳定。
+
 3. 安装项目的 python 依赖
 
    ```bash
@@ -84,7 +90,7 @@
    ```bash
    poetry run python index.py
    ```
-   
+
 5. 后端服务启动后，尝试执行 `test_full_process.py` 脚本，生成视频。
 
    1. 打开一个新的命令终端窗口
@@ -103,6 +109,19 @@
       ```bash
       poetry run pytest -s tests/e2e_tests
       ```
+
+6. 启动前端服务
+   ```bash
+   cd demohouse/chat2cartoon/frontend
+   npm install -g pnpm@8
+   pnpm install
+   cp ../.env ./
+   pnpm dev
+   ```
+
+6. 给设置的 TOS 桶配置跨域，允许本地浏览器访问 TOS 桶上媒体资源
+
+7. 访问 `http://localhost:8080` 即可体验。
 
 ## 目录结构
 ```
