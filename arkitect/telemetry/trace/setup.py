@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 import os
-from typing import Optional
+import sys
+from datetime import datetime
+from os import linesep
+from typing import IO, Optional
 
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource, ResourceAttributes
@@ -67,6 +71,7 @@ def setup_tracing(
     endpoint: Optional[str] = None,
     trace_on: bool = True,
     trace_config: Optional[TraceConfig] = None,
+    log_dir: Optional[str] = None,
 ) -> None:
     if not trace_on:
         return
@@ -76,7 +81,14 @@ def setup_tracing(
     if provider is not None:
         return
 
-    exporter: SpanExporter = ConsoleSpanExporter()
+    out = _get_trace_log_file(log_dir) if log_dir else sys.stdout
+    exporter: SpanExporter = ConsoleSpanExporter(
+        out=out,
+        formatter=lambda span: json.dumps(
+            json.loads(span.to_json()), ensure_ascii=False, indent=4
+        )
+        + linesep,
+    )
     resource: Resource = Resource.create(
         {
             ResourceAttributes.SERVICE_NAME: "bot",
@@ -124,3 +136,18 @@ def _get_host_name() -> str:
         # faas env key
         host_name = os.getenv("_BYTEFAAS_POD_NAME", "")
     return host_name
+
+
+def _get_trace_log_file(log_dir: str = "./") -> IO:
+    # 生成时间戳
+    timestr = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    # 拼接完整文件名
+    filename = f"trace_{timestr}.log"
+    filepath = os.path.join(log_dir, filename)
+
+    # 确保目录存在
+    os.makedirs(log_dir, exist_ok=True)
+
+    # 返回打开的文件对象（读写模式，UTF-8编码）
+    return open(filepath, "w+", encoding="utf-8")
