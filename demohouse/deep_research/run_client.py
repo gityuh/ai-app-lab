@@ -8,24 +8,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from openai import OpenAI
 
-# 注意baseUrl
-client = OpenAI(base_url="http://localhost:8888/api/v3/bots", api_key="{YOUR_API_KEY}")
+client = OpenAI(base_url="http://localhost:8888/api/v3/bots", api_key="{API_KEY}")
 
 
 def main():
+    # stream run
     stream_resp = client.chat.completions.create(
         model="test",
         messages=[
             {
                 "role": "user",
-                "content": "找到2023年中国GDP超过万亿的城市，详细分析其中排名后十位的城市的增长率和GDP构成，并结合各城市规划预测5年后这些城市的GDP排名可能会如何变化",
+                "content": "帮我查一下2024年11月上市的智能手机的价格，并给出一篇有关其中最便宜的一款的网络评测",
             }
         ],
         stream=True,
     )
+
     thinking = False
+
     for chunk in stream_resp:
         if chunk.choices[0].delta.model_extra.get("reasoning_content"):
             if not thinking:
