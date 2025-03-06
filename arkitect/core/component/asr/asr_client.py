@@ -34,7 +34,7 @@ from arkitect.core.component.asr.model import (
 )
 from arkitect.telemetry.logger import INFO
 from arkitect.telemetry.trace import task
-from arkitect.utils.binary_protocol import (
+from arkitect.utils.binary_protocol import (  # type: ignore
     AUDIO_ONLY_REQUEST,
     NO_SEQUENCE,
     POS_SEQUENCE,
@@ -127,7 +127,7 @@ class AsyncASRClient(BaseAsyncASRClient, ABC):
         await self.init()
         INFO("Reset ASR Connection")
 
-    async def stream_asr(
+    async def stream_asr(  # type: ignore
         self, stream_audio: AsyncIterable[bytes], **kwargs: Any
     ) -> AsyncIterable[Optional[ASRFullServerResponse]]:
         """
@@ -158,7 +158,7 @@ class AsyncASRClient(BaseAsyncASRClient, ABC):
                     continue
                 response = await self._receive_response()
                 INFO(f"Received asr server response: {response}")
-                yield response
+                yield response  # type: ignore
 
         t = asyncio.create_task(send_audio_task(audio_stream=stream_audio))
 
@@ -191,8 +191,8 @@ class AsyncASRClient(BaseAsyncASRClient, ABC):
         full_client_bytes.extend(payload_bytes)
         # payload
 
-        await self.conn.send(full_client_bytes)
-        res = await self.conn.recv()
+        await self.conn.send(full_client_bytes)  # type: ignore
+        res = await self.conn.recv()  # type: ignore
         return ASRFullServerResponse(**parse_response(res))
 
     @task(watch_io=False)
