@@ -5,49 +5,54 @@
 Deep Research 是一款专为应对复杂问题而设计的高效工具，利用 DeepSeek-R1 大模型对复杂问题进行多角度分析，并辅助互联网资料，快速生成最合适用户的解决方案。
 无论是在学术研究、企业决策还是产品调研中，Deep Research 都能够有效地协助用户深入挖掘，提出切实可行的解决策略。
 
+![img.png](docs/preview.png)
+
 ## 费用说明
 
 - 推理总结模型计费
 
-  - DeepSeek-R1 大模型：开通赠送500,000 tokens [免费额度](https://www.volcengine.com/docs/82379/1399514)，超过部分按 token 使用量付费，详见 [计费说明](https://www.volcengine.com/docs/82379/1099320#%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B)
+  - DeepSeek-R1 大模型：开通赠送500,000 tokens <a href="https://www.volcengine.com/docs/82379/1399514" target="_blank">免费额度</a>，超过部分按 token 使用量付费，详见 <a href="https://www.volcengine.com/docs/82379/1099320#%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B" target="_blank">计费说明</a>
 
   
 - 联网搜索服务计费，您可自由选择使用的联网搜索服务
 
   - 选择一：使用火山方舟零代码联网应用作为搜索引擎，计费项如下
   
-    - Doubao-pro-32k/Doubao-1.5-pro-32k，开通赠送500,000 tokens  [免费额度](https://www.volcengine.com/docs/82379/1399514)，超过部分按 token 使用量付费，价格详见 [计费说明](https://www.volcengine.com/docs/82379/1099320#%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B)
+    - Doubao-pro-32k/Doubao-1.5-pro-32k，开通赠送500,000 tokens <a href="https://www.volcengine.com/docs/82379/1399514" target="_blank">免费额度</a>，超过部分按 token 使用量付费，价格详见 <a href="https://www.volcengine.com/docs/82379/1099320#%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B" target="_blank" >计费说明</a>
     
-    - 联网内容插件，价格详见 [计费说明](https://www.volcengine.com/docs/82379/1338550)
+    - 联网内容插件，价格详见 <a target="_blank" href="https://www.volcengine.com/docs/82379/1338550">计费说明</a>
     
-  - 选择二：使用开源搜索引擎 Tavily，由 Tavily 官方进行收费，计费规则详见 [计费说明](https://tavily.com/#pricing)
+  - 选择二：使用开源搜索引擎 Tavily，由 Tavily 官方进行收费，计费规则详见 <a href="https://tavily.com/#pricing" target="_blank">计费说明</a>
   
   - 选择三：其他 Search API 或者企业内部 Search 接口，火山方舟侧不收取费用
 
 ## 环境准备
 
-- Poetry 1.6.1 版本
-- Python 版本要求大于等于 3.9.0，小于 3.12
-- 火山方舟 API
-  KEY [参考文档](https://www.volcengine.com/docs/82379/1298459#api-key-%E7%AD%BE%E5%90%8D%E9%89%B4%E6%9D%83)
-- 火山引擎 AK SK [参考文档](https://www.volcengine.com/docs/6291/65568)
-- 创建 DeepSeek-R1 的endpoint [参考文档](https://www.volcengine.com/docs/82379/1099522)
+- Python - 版本要求大于等于 3.9.0，小于 3.12
+- Poetry 1.6.1 版本，可参考以下命令安装
 
+  ```
+  pip install poetry==1.6.1
+  ```
+
+- <a target="_blank" href="https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey">获取火山方舟 API KEY</a> | <a target="_blank" href="https://www.volcengine.com/docs/82379/1298459#api-key-%E7%AD%BE%E5%90%8D%E9%89%B4%E6%9D%83">参考文档</a>
+- 在<a target="_blank" href="https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement?LLM=%7B%7D&OpenTokenDrawer=false">开通管理页</a>开通 DeepSeek-R1 模型。
+- （可选）如果通过火山方舟高代码应用部署本demo，<a target="_blank" href="https://console.volcengine.com/iam/keymanage/">需获取火山引擎 AK SK</a> | <a target="_blank" href="https://www.volcengine.com/docs/6291/65568"> 参考文档 </a>
 - 搜索引擎选择：以下方式任选其一
-  - 使用火山方舟零代码联网应用作为搜索引擎，推荐配置参见附录，操作步骤详情见 [参考文档](https://www.volcengine.com/docs/82379/1267885)
-  - 使用开源搜索引擎 Tavily，需获取 Tavily APIKEY [参考文档](https://docs.tavily.com/guides/quickstart)
+  - 使用火山方舟零代码联网应用作为搜索引擎，推荐配置参见【附录】，操作步骤详情见 <a target="_blank" href="https://www.volcengine.com/docs/82379/1267885">参考文档</a>
+  - 使用开源搜索引擎 Tavily，需获取 Tavily APIKEY <a target="_blank" href="https://docs.tavily.com/guides/quickstart"> 参考文档 </a>
 
 ## 快速入门
 
-本文为您介绍如何在本地以及利用火山方舟高代码应用快速部署 Deep Research 项目，本项目可以通过以下三种方式进行部署：
+本文为您介绍如何在本地以及利用火山方舟高代码应用快速部署 Deep Research 项目，本项目可以通过以下两种方式进行部署：
 
 | **方式**      | **说明**                  | **适用场景**                  |
 |-------------|-------------------------|---------------------------|
-| 本地测试运行      | 本地使用python运行测试脚本，执行单个任务 | 本地调试、测试验证效果               |
-| 部署为本地服务     | 使用python在本地启动web服务      | 本地/局域网内部署API服务            |
+| 本地部署运行     | 本地启动服务和webui      | 本地测试和局域网内部署API服务            |
 | 部署火山方舟高代码应用 | 使用火山方舟高代码应用方式托管部署       | 低成本快速实现云端API服务部署 + 对话界面体验 |
 
-### 方式一：本地测试运行
+
+### 方式一：本地部署运行
 
 1. 下载代码库
 
@@ -56,97 +61,41 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
     cd demohouse/deep_research
     ```
 
-2. 安装项目依赖
+2. 设置环境变量
 
-    ```shell
-    pip install poetry==1.6.1
-   
-    poetry install
-    ```
+   - 如果使用火山方舟零代码联网应用作为搜索引擎，需要设置如下环境变量
 
-
-3. 修改`run_local.py`文件中配置
-
-   - 如果使用火山方舟零代码联网应用作为搜索引擎，配置修改如下
-
-     ```python
-     # Deepseek R1 模型推理接入点，不建议使用蒸馏版本
-     REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
+     ```shell
+     # 填写火山方舟API KEY
+     export ARK_API_KEY=xxx-xxxx-xxx-xxx
+    
+     # 思考模型名称，填写deepseek-r1-250120
+     export REASONING_MODEL=deepseek-r1-250120
+    
      # 设置使用火山方舟零代码联网应用作为搜索引擎
-     SEARCH_ENGINE = "volc_bot"
+     export SEARCH_ENGINE=volc_bot
+    
      # 配置火山方舟零代码联网应用的bot id
-     SEARCH_BOT_ID = "{YOUR_BOT_ID}"
-     # 用于测试的问题
-     QUERY = "找到2023年中国GDP超过万亿的城市，详细分析其中排名后十位的城市的增长率和GDP构成，并结合各城市规划预测5年后这些城市的GDP排名可能会如何变化"
+     export SEARCH_BOT_ID=bot-xxxxxx-xx
      ```
 
-   - 如果使用 tavily 作为搜索引擎，配置修改如下
+   - 如果使用 tavily 作为搜索引擎，需要设置如下环境变量
 
-     ```python
-     # Deepseek R1 模型推理接入点，不建议使用蒸馏版本
-     REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
+     ```shell
+     # 填写火山方舟API KEY
+     export ARK_API_KEY=xxx-xxxx-xxx-xxx
+     
+     # 思考模型名称，填写deepseek-r1-250120
+     export REASONING_MODEL=deepseek-r1-250120
+     
      # 设置使用tavily作为搜索引擎
-     SEARCH_ENGINE = "tavily"
+     export SEARCH_ENGINE=tavily
+     
      # 配置tavily的APIKEY
-     TAVILY_API_KEY = "{YOUR_TAVILY_API_KEY}"
-     # 用于测试的问题
-     QUERY = "找到2023年中国GDP超过万亿的城市，详细分析其中排名后十位的城市的增长率和GDP构成，并结合各城市规划预测5年后这些城市的GDP排名可能会如何变化"
+     export TAVILY_API_KEY=xxx-xxx-xxx-xxx
      ```
 
-4. 设置环境变量`ARK_API_KEY`
-
-    ```shell
-    # 填写火山方舟API KEY
-    export ARK_API_KEY="{YOUR_ARK_API_KEY}"
-    ```
-
-5. 本地运行
-
-    ```shell
-    poetry run run_local.py
-    ```
-
-### 方式二：部署为本地服务
-
-1. 下载代码库
-
-    ```shell
-    git clone https://github.com/volcengine/ai-app-lab.git
-    cd demohouse/deep_research
-    ```
-
-2. 修改`server.py`文件中配置
-
-   - 如果使用火山方舟零代码联网应用作为搜索引擎，配置修改如下
-
-     ```python
-     # Deepseek R1 模型推理接入点，不建议使用蒸馏版本
-     REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
-     # 设置使用火山方舟零代码联网应用作为搜索引擎
-     SEARCH_ENGINE = "volc_bot"
-     # 配置火山方舟零代码联网应用的bot id
-     SEARCH_BOT_ID = "{YOUR_BOT_ID}"
-     ```
-
-   - 如果使用 tavily 作为搜索引擎，配置修改如下
-
-     ```python
-     # Deepseek R1 模型推理接入点，不建议使用蒸馏版本
-     REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
-     # 设置使用tavily作为搜索引擎
-     SEARCH_ENGINE = "tavily"
-     # 配置tavily的APIKEY
-     TAVILY_API_KEY = "{YOUR_TAVILY_API_KEY}"  
-     ```
-
-3. 设置环境变量`ARK_API_KEY`
-
-    ```shell
-    # 填写火山方舟API KEY
-    export ARK_API_KEY="{YOUR_ARK_API_KEY}"
-    ```
-
-4. 安装项目依赖并运行
+3. 安装项目依赖并运行
 
     > 说明
     >
@@ -155,105 +104,72 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
     ```shell
     python -m venv .venv
     source .venv/bin/activate
-    
-    pip install poetry==1.6.1
-    
+        
     poetry install
     poetry run python -m server
     ```
 
-5. 使用 openAI client 访问 API ，示例代码如下
+4. 启动webui
 
-    ```python
-    from openai import OpenAI
+    ```shell
+    # 需要先设置连接本地服务器
+    export API_ADDR=http://localhost:8888/api/v3/bots
     
-    # 注意baseUrl
-    client = OpenAI(base_url="http://localhost:8888/api/v3/bots")
+    python -m venv .venv
+    source .venv/bin/activate
+    poetry install
     
-    
-    def main():
-        # stream run
-        stream_resp = client.chat.completions.create(
-            model="test",  # useless, only for validation
-            messages=[
-                {
-                    "role": "user",
-                    "content": "找到2023年中国GDP超过万亿的城市，详细分析其中排名后十位的城市的增长率和GDP构成，并结合各城市规划预测5年后这些城市的GDP排名可能会如何变化",
-                }
-            ],
-            stream=True,
-        )
-    
-        thinking = False
-    
-        for chunk in stream_resp:
-            if chunk.choices[0].delta.reasoning_content:
-                if not thinking:
-                    print("\n----思考过程----\n")
-                    thinking = True
-                print(chunk.choices[0].delta.reasoning_content, end="")
-            elif chunk.choices[0].delta.content:
-                if thinking:
-                    print("\n----输出回答----\n")
-                    thinking = False
-                print(chunk.choices[0].delta.content, end="")
-    
-    
-    if __name__ == "__main__":
-        main()
+    # 启动web ui
+    poetry run python -m webui
     ```
+5. 使用浏览器访问 `http://localhost:7860/` 即可使用
 
-### 方式三：部署火山方舟高代码应用
+    ![img.png](docs/webui.png)
 
-1. 在本地下载代码包
+### 方式二：部署火山方舟高代码应用
+
+1. 在<a href="https://console.volcengine.com/ark/region:ark+cn-beijing/assistant" target="_blank">火山方舟控制台</a>创建高代码应用 | <a target="_blank" href="https://www.volcengine.com/docs/82379/1333715">参考文档</a>，完成首次部署后点击【更新代码】进入函数详情页面
+
+    ![img.png](docs/procode_new.png)
+
+2. 在本地下载代码包
 
     ```shell
     git clone https://github.com/volcengine/ai-app-lab.git
     cd demohouse/deep_research
     ```
 
-2. 修改配置`server.py`文件中配置
-
-   - 如果使用火山方舟零代码联网应用作为搜索引擎，配置修改如下
-
-     ```python
-     # Deepseek R1 模型推理接入点，不建议使用蒸馏版本
-     REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
-     # 设置使用火山方舟零代码联网应用作为搜索引擎
-     SEARCH_ENGINE = "volc_bot"
-     # 配置火山方舟零代码联网应用的bot id
-     SEARCH_BOT_ID = "{YOUR_BOT_ID}"
-     ```
-
-   - 如果使用 tavily 作为搜索引擎，配置修改如下
-
-     ```python
-     # Deepseek R1 模型推理接入点，不建议使用蒸馏版本
-     REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
-     # 设置使用tavily作为搜索引擎
-     SEARCH_ENGINE = "tavily"
-     # 配置tavily的APIKEY
-     TAVILY_API_KEY = "{YOUR_TAVILY_API_KEY}"
-     ```
-
-3. 在火山方舟控制台创建高代码应用 [参考文档](https://www.volcengine.com/docs/82379/1333715)
-
-4. 打包本地代码为 `code.zip`
+3. 打包本地代码为 `code.zip`
 
     ```shell
     cd demohouse/deep_research
     zip -r code.zip *
     ```
 
-5. 上传`code.zip`，更新高代码应用的代码
+4. 上传`code.zip`，更新高代码应用的代码
 
-6. 执行【安装依赖】
+5. 执行【安装依赖】
 
    ![img.png](docs/img_3.png)
 
-7. 在【函数配置】中新增环境变量`ARK_API_KEY`，设置为火山方舟APIKEY，并调整函数执行超时时间为 900 s
+6. 在【函数配置】中按需调整环境变量：
 
-   ![img.png](docs/img_4.png)
+   - 如果使用火山方舟零代码联网应用作为搜索引擎，需要设置如下环境变量
+     - `ARK_API_KEY`: 填写环境准备章节获取的火山方舟API KEY
+     - `REASONING_MODEL`: 填写`deepseek-r1-250120`
+     - `SEARCH_ENGINE`: 填写`volc_bot`
+     - `SEARCH_BOT_ID`: 填写火山方舟零代码联网应用的 bot id（可参考附录获取）
+   - 如果使用 tavily 作为搜索引擎，需要设置如下环境变量
+     - `ARK_API_KEY`: 填写环境准备章节获取的火山方舟API KEY
+     - `REASONING_EP_ID`: 填写`deepseek-r1-250120`
+     - `SEARCH_ENGINE`: 填写`tavily`
+     - `TAVILY_API_KEY`: 配置tavily的APIKEY
+
+   ![img.png](docs/procode_env.png)
+
+7. （建议）在【函数配置】中调整函数执行超时时间为 900 s
+
+    ![img.png](docs/procode_execute_timeout.png)
 
 8. 单击右上角【发布】，重新发布应用
 
@@ -265,48 +181,22 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
 
      ![img.png](docs/img_6.png)
 
-   - 通过 openAI SDK 进行 chat api 调用，示例代码如下
+   - 在本地通过 webui 体验
 
-    ```python
-    from openai import OpenAI
-    
-    client = OpenAI(
-        base_url="https://ark.cn-beijing.volces.com/api/v3/bots",
-        api_key="{YOUR_ARK_API_KEY}"  # 传入方舟API KEY
-    )
-    
-    
-    def main():
-        # stream run
-        stream_resp = client.chat.completions.create(
-            model="{YOUR_BOT_ID}",  # 传入部署的高代码应用botId
-            messages=[
-                {
-                    "role": "user",
-                    "content": "帮我查一下2024年11月上市的智能手机的价格，并给出一篇有关其中最便宜的一款的网络评测",
-                }
-            ],
-            stream=True,
-        )
-    
-        thinking = False
-    
-        for chunk in stream_resp:
-            if chunk.choices[0].delta.reasoning_content:
-                if not thinking:
-                    print("\n----思考过程----\n")
-                    thinking = True
-                print(chunk.choices[0].delta.reasoning_content, end="")
-            elif chunk.choices[0].delta.content:
-                if thinking:
-                    print("\n----输出回答----\n")
-                    thinking = False
-                print(chunk.choices[0].delta.content, end="")
-    
-    
-    if __name__ == "__main__":
-        main()
-    ```
+     1. 执行以下命令，在本地启动 webui，并连接远程服务。
+
+       ```shell
+       cd demohouse/deep_research
+       # 安装项目依赖
+       poetry install
+       # 设置环境变量为前面步骤中的高代码应用botID
+       export API_BOT_ID=bot-xxxx-xxx
+       # 运行webui
+       poetry run python -m webui
+       ```
+     2. 启动成功后可访问`http://localhost:7860`体验服务。
+   
+     ![img](docs/webui.png)
 
 ## 技术实现
 
@@ -332,9 +222,9 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
 ## 目录结构
 
 ```
-.
 ├── README.md
 ├── __init__.py
+├── config.py
 ├── deep_research.py # 项目核心逻辑实现
 ├── docs
 ├── poetry.lock
@@ -342,24 +232,23 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
 ├── pyproject.toml
 ├── requirements.txt
 ├── run.sh # 用于部署火山方舟高代码应用，启动入口
-├── run_client.py # client 调用示范
-├── run_local.py # 用于本地运行测试
 ├── search_engine
 │   ├── __init__.py
 │   ├── search_engine.py
 │   ├── tavily.py # tavily 搜索引擎实现
 │   └── volc_bot.py # 火山方舟零代码联网应用 搜索引擎实现
 ├── server.py # 服务启动入口
-└── utils.py
+├── utils.py
+└── webui.py # webui启动入口
 ```
 
 ## 附录
 
 ### 创建推荐配置的零代码联网应用
 
-创建零代码应用时，推荐以下配置：
+<a target="_blank" href="https://console.volcengine.com/ark/region:ark+cn-beijing/assistant">创建零代码应用</a>时，推荐以下配置：
 
-- 推理接入点：Doubao-pro-32k
+- 推理接入点：Doubao-pro-32k / Doubao-pro-1.5-32k
 - 联网内容插件：开启
   - 智能改写：关闭
   - 调用方式：选择强制开启

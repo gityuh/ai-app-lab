@@ -71,6 +71,6 @@ class VolcBotSearchEngine(SearchEngine, ABC):
                     url=r.url,
                     content=r.summary,
                     title=r.title,
-                ) for r in response.references
+                ) for r in response.references if response.references
             ]
         )
