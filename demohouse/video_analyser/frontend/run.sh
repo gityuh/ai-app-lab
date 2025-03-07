@@ -11,4 +11,4 @@
 
 cd code/
 pnpm install
-npx modern dev APP_ID=<APP_ID> ACCESS_TOKEN=<APP_ACCESS_TOKEN> FAAS_URL=http://localhost:8888
+npx modern dev ASR_APP_ID=<ASR_APP_ID> ASR_ACCESS_TOKEN=<ASR_ACCESS_TOKEN> FAAS_URL=http://localhost:8888

@@ -10,7 +10,7 @@
 // limitations under the License. 
 
 declare const APP_CONTEXT: {
-  APP_ID: string;
-  ACCESS_TOKEN: string;
-  FAAS_URL: string;
+    ASR_APP_ID: string;
+    ASR_ACCESS_TOKEN: string;
+    FAAS_URL: string;
 };

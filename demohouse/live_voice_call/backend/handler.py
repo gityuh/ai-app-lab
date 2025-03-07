@@ -22,13 +22,13 @@ from service import VoiceBotService
 from utils import *
 
 # replace with your asr API access
-ASR_ACCESS_KEY = "{YOUR_ASR_ACCESS_KEY}"
-ASR_APP_KEY = "{YOUR_ASR_APP_KEY}"
+ASR_ACCESS_TOKEN = "{YOUR_ASR_ACCESS_TOKEN}"
+ASR_APP_ID = "{YOUR_ASR_APP_ID}"
 # replace with your tts API access
-TTS_ACCESS_KEY = "{YOUR_TTS_ACCESS_KEY}"
-TTS_APP_KEY = "{YOUR_TTS_APP_KEY}"
+TTS_ACCESS_TOKEN = "{YOUR_TTS_ACCESS_TOKEN}"
+TTS_APP_ID = "{YOUR_TTS_APP_ID}"
 # replace with your ark endpoint
-LLM_ENDPOINT_ID = "{YOUR_LLM_ENDPOINT_ID}"
+LLM_ENDPOINT_ID = "{YOUR_ARK_LLM_ENDPOINT_ID}"
 
 # Configure logging
 logging.basicConfig(
@@ -47,10 +47,10 @@ async def handler(websocket: websockets.WebSocketCommonProtocol, path):
     # Create a VoiceBotService instance and initialize it
     service = VoiceBotService(
         llm_ep_id=LLM_ENDPOINT_ID,
-        tts_app_key=TTS_APP_KEY,
-        tts_access_key=TTS_ACCESS_KEY,
-        asr_app_key=ASR_APP_KEY,
-        asr_access_key=ASR_ACCESS_KEY,
+        tts_app_key=TTS_APP_ID,
+        tts_access_key=TTS_ACCESS_TOKEN,
+        asr_app_key=ASR_APP_ID,
+        asr_access_key=ASR_ACCESS_TOKEN,
     )
     await service.init()
     # Send a bot ready message

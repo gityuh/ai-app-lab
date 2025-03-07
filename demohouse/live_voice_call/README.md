@@ -28,7 +28,7 @@
 
 本项目的整体流程架构如下：
 
-![img.png](img.png)
+![img.png](assets/img.png)
 
 ## 环境准备
 
@@ -36,8 +36,7 @@
 - Python 版本要求大于等于 3.8，小于 3.12
 - Node 18.0 或以上版本 
 - PNPM 8.10 或以上版本
-- 火山 TTS API access [参考文档](https://www.volcengine.com/docs/6561/163043) ，**仅对企业客户开放，您可以先完成企业实名认证后接入使用**
-- 火山 ASR API access [参考文档](https://www.volcengine.com/docs/6561/163043) ，**仅对企业客户开放，您可以先完成企业实名认证后接入使用**
+- 获取语音技术产品的 APP ID 和 Access Token，获取方式参见【附录】
 - 火山方舟 API KEY [参考文档](https://www.volcengine.com/docs/82379/1298459#api-key-%E7%AD%BE%E5%90%8D%E9%89%B4%E6%9D%83)
 - 火山引擎 AK SK [参考文档](https://www.volcengine.com/docs/6291/65568)
 - 创建 Doubao-Pro 32K 的endpoint [参考文档](https://www.volcengine.com/docs/82379/1099522)
@@ -58,10 +57,10 @@
 - 修改`backend/handler.py`
 
     ```python
-    ASR_ACCESS_KEY = "{YOUR_ASR_ACCESS_KEY}"
-    ASR_APP_KEY = "{YOUR_ASR_APP_KEY}"
-    TTS_ACCESS_KEY = "{YOUR_TTS_ACCESS_KEY}"
-    TTS_APP_KEY = "{YOUR_TTS_APP_KEY}"
+    ASR_ACCESS_TOKEN = "{YOUR_ASR_ACCESS_TOKEN}"
+    ASR_APP_ID = "{YOUR_ASR_APP_ID}"
+    TTS_ACCESS_TOKEN = "{YOUR_TTS_ACCESS_TOKEN}"
+    TTS_APP_ID = "{YOUR_TTS_APP_ID}"
     LLM_ENDPOINT_ID = "{YOUR_ARK_LLM_ENDPOINT_ID}"
     ```
 
@@ -338,10 +337,28 @@ Web端和服务端通过二进制协议进行交互，协议格式如下：
 
 ### 交互时序示意
 
-![img_1.png](img_1.png)
+![img_1.png](assets/img_1.png)
 
-# 附录
-- ASR API 官方文档: https://www.volcengine.com/docs/6561/1354869
-- TTS API 官方文档: https://www.volcengine.com/docs/6561/1329505
-- TTS 合成音色列表：https://www.volcengine.com/docs/6561/1257544
-- 大模型 API 官方文档：https://www.volcengine.com/docs/82379/1298454
+## 附录
+
+### 获取 TTS_APP_ID、TTS_ACCESS_TOKEN、ASR_APP_ID、ASR_ACCESS_TOKEN？
+
+1. [完成企业认证](https://console.volcengine.com/user/authentication/detail/)
+
+2. [开通语音技术产品](https://console.volcengine.com/speech/app)
+
+3. [创建应用](https://console.volcengine.com/speech/app)，同时勾选大模型语音合成和流式语音识别大模型
+    ![alt text](assets/faq1.png)
+
+4. 开通语音合成大模型，确保页面具有音色。注意：语音合成大模型从开通到可以使用有大概5-10分钟延迟
+   ![alt text](assets/faq2.png)
+   ![alt text](assets/faq3.png)
+
+5. 流式语音识别大模型有试用包，可以不开通。如需提供稳定服务，建议开通正式版本。
+   ![alt text](assets/faq4.png)
+
+6. 获取TTS_APP_ID 和TTS_ACCESS_TOKEN
+   ![alt text](assets/faq5.png)
+
+7. 获取ASR_APP_ID、ASR_ACCESS_TOKEN
+   ![alt text](assets/faq6.png)

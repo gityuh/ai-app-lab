@@ -27,9 +27,8 @@ LLM_ENDPOINT_ID = os.getenv("LLM_ENDPOINT_ID", "")
 VLM_ENDPOINT_ID = os.getenv("VLM_ENDPOINT_ID", "")
 CGT_ENDPOINT_ID = os.getenv("CGT_ENDPOINT_ID", "")
 
-TTS_API_RESOURCE_ID = os.getenv("TTS_API_RESOURCE_ID", "")
-TTS_APP_KEY = os.getenv("TTS_APP_KEY", "")
-TTS_ACCESS_KEY = os.getenv("TTS_ACCESS_KEY", "")
+TTS_APP_ID = os.getenv("TTS_APP_ID", "")
+TTS_ACCESS_TOKEN = os.getenv("TTS_ACCESS_TOKEN", "")
 TTS_INT_SIZE = 4
 
 ONE_DAY_IN_SECONDS = 60 * 60 * 24

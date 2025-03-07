@@ -34,11 +34,7 @@
 - Python 版本要求大于等于 3.8，小于 3.12
 - Poetry 1.6.1 版本 [参考文档](https://python-poetry.org/docs/#installing-with-the-official-installer)
 - Node 版本要求大于等于 16.2.0
-- 火山语音技术相关准备工作，**仅对企业客户开放，您可以先完成企业实名认证后接入使用**
-  - 已创建一个**语音服务**的应用 [创建链接](https://console.volcengine.com/speech/app)
-  - 对该应用已开通**语音合成大模型**和**流式语音识别大模型**两个服务 [参照文档](https://www.volcengine.com/docs/6561/163043)
-    - 注意：**语音合成大模型**从开通到可以使用有大概5-10分钟延迟
-  - 已获取上述两个服务的 APP ID 和 Access Token [参考文档](https://www.volcengine.com/docs/6561/1329505)
+- 获取语音技术产品的 APP ID 和 Access Token，获取方式参见【附录】
 - 火山方舟 API KEY [参考文档](https://www.volcengine.com/docs/82379/1298459#api-key-%E7%AD%BE%E5%90%8D%E9%89%B4%E6%9D%83)
 - 火山引擎 AK SK [参考文档](https://www.volcengine.com/docs/6291/65568)
 - 火山 TOS 桶 [参考文档](https://www.volcengine.com/docs/6349/74830)
@@ -60,9 +56,8 @@
 
    | 配置变量名               | 说明                                    |
    |:--------------------|:--------------------------------------|
-   | TTS_ACCESS_KEY      | 语音技术 API Access Key                   |
-   | TTS_APP_KEY         | 语音技术 App Key                          |
-   | TTS_API_RESOURCE_ID | 语音技术 API Resource ID                  |
+   | TTS_ACCESS_TOKEN      | 语音合成模型 Access Token                  |
+   | TTS_APP_ID         | 语音合成模型 APP ID                          |
    | ARK_API_KEY         | 火山方舟 API Key，用于方舟模型接入点推理时做鉴权          |
    | VOLC_ACCESSKEY     | 火山引擎账号 Access Key，用于访问 TOS API，上载模型产物 |
    | VOLC_SECRETKEY     | 火山引擎账号 Secret Key，用于访问 TOS API，上载模型产物 |
@@ -276,3 +271,27 @@ assistant 返回的 `content` 格式都按照：`phase={状态} {内容}`
   ]
 }
 ```
+
+## 附录
+
+### 获取 TTS_APP_ID、TTS_ACCESS_TOKEN、ASR_APP_ID、ASR_ACCESS_TOKEN？
+
+1. [完成企业认证](https://console.volcengine.com/user/authentication/detail/)
+
+2. [开通语音技术产品](https://console.volcengine.com/speech/app)
+
+3. [创建应用](https://console.volcengine.com/speech/app)，同时勾选大模型语音合成和流式语音识别大模型
+    ![alt text](assets/faq1.png)
+
+4. 开通语音合成大模型，确保页面具有音色。注意：语音合成大模型从开通到可以使用有大概5-10分钟延迟
+   ![alt text](assets/faq2.png)
+   ![alt text](assets/faq3.png)
+
+5. 流式语音识别大模型有试用包，可以不开通。如需提供稳定服务，建议开通正式版本。
+   ![alt text](assets/faq4.png)
+
+6. 获取TTS_APP_ID 和TTS_ACCESS_TOKEN
+   ![alt text](assets/faq5.png)
+
+7. 获取ASR_APP_ID、ASR_ACCESS_TOKEN
+   ![alt text](assets/faq6.png)

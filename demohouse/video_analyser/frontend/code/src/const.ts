@@ -14,9 +14,9 @@ export const ScreenWidth = 430;
 export const ScreenHeight = 800;
 
 export const BaseURL =
-  process.env.NODE_ENV === 'development' ? '/api' : APP_CONTEXT.FAAS_URL;
+    process.env.NODE_ENV === 'development' ? '/api' : APP_CONTEXT.FAAS_URL;
 
-const APP_ID = APP_CONTEXT.APP_ID;
-const ACCESS_TOKEN = APP_CONTEXT.ACCESS_TOKEN;
+const ASR_APP_ID = APP_CONTEXT.ASR_APP_ID;
+const ASR_ACCESS_TOKEN = APP_CONTEXT.ASR_ACCESS_TOKEN;
 
-export const AsrURL = `wss://openspeech.bytedance.com/api/v3/sauc/bigmodel?api_access_key=${ACCESS_TOKEN}&api_app_key=${APP_ID}&api_resource_id=volc.bigasr.sauc.duration`;
+export const AsrURL = `wss://openspeech.bytedance.com/api/v3/sauc/bigmodel?api_access_key=${ASR_ACCESS_TOKEN}&api_app_key=${ASR_APP_ID}&api_resource_id=volc.bigasr.sauc.duration`;

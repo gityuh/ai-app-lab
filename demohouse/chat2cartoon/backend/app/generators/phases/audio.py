@@ -25,9 +25,8 @@ from app.constants import (
     ARTIFACT_TOS_BUCKET,
     DEFAULT_AUDIO_TONE,
     MAX_STORY_BOARD_NUMBER,
-    TTS_ACCESS_KEY,
-    TTS_API_RESOURCE_ID,
-    TTS_APP_KEY,
+    TTS_ACCESS_TOKEN,
+    TTS_APP_ID,
     VALID_TONES,
 )
 from app.generators.base import Generator
@@ -61,9 +60,8 @@ class AudioGenerator(Generator):
         super().__init__(request, mode)
         self.tos_client = TOSClient()
         self.tts_client = AsyncTTSClient(
-            api_resource_id=TTS_API_RESOURCE_ID,
-            access_key=TTS_ACCESS_KEY,
-            app_key=TTS_APP_KEY,
+            access_key=TTS_ACCESS_TOKEN,
+            app_key=TTS_APP_ID,
             connection_params=ConnectionParams(
                 audio_params=AudioParams(format="mp3", sample_rate=24000),
             ),

@@ -26,8 +26,8 @@ export default defineConfig({
   source: {
     globalVars: {
       APP_CONTEXT: {
-        APP_ID: argObj.APP_ID,
-        ACCESS_TOKEN: argObj.ACCESS_TOKEN,
+        ASR_APP_ID: argObj.ASR_APP_ID,
+        ASR_ACCESS_TOKEN: argObj.ASR_ACCESS_TOKEN,
         FAAS_URL: argObj.FAAS_URL,
       },
     },

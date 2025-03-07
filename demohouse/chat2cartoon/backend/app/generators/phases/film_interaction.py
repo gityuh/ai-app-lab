@@ -19,9 +19,8 @@ from volcenginesdkarkruntime.types.chat.chat_completion_chunk import Choice, Cho
 from app.clients.vlm import VLMClient
 from app.constants import (
     IMAGE_SIZE_LIMIT,
-    TTS_ACCESS_KEY,
-    TTS_API_RESOURCE_ID,
-    TTS_APP_KEY,
+    TTS_ACCESS_TOKEN,
+    TTS_APP_ID,
     VLM_ENDPOINT_ID,
 )
 from app.generators.base import Generator
@@ -90,9 +89,8 @@ class FilmInteractionGenerator(Generator):
         super().__init__(request, mode)
         self.vlm_client = VLMClient(VLM_ENDPOINT_ID)
         self.tts_client = AsyncTTSClient(
-            api_resource_id=TTS_API_RESOURCE_ID,
-            access_key=TTS_ACCESS_KEY,
-            app_key=TTS_APP_KEY,
+            access_key=TTS_ACCESS_TOKEN,
+            app_key=TTS_APP_ID,
             connection_params=ConnectionParams(
                 audio_params=AudioParams(format="mp3", sample_rate=24000),
                 speaker="zh_male_shaonianzixin_moon_bigtts",

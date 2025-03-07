@@ -1,13 +1,13 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # Licensed under the 【火山方舟】原型应用软件自用许可协议
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at 
+# You may obtain a copy of the License at
 #     https://www.volcengine.com/docs/82379/1433703
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License. 
+# limitations under the License.
 
 """
 Video Analyser: Realtime vision and speech analysis
@@ -20,7 +20,7 @@ from typing import AsyncIterable, List, Optional, Tuple, Union
 
 import prompt
 import utils
-from config import LLM_ENDPOINT, VLM_ENDPOINT, access_key, app_key
+from config import LLM_ENDPOINT, VLM_ENDPOINT, TTS_ACCESS_TOKEN, TTS_APP_ID
 
 from arkitect.core.component.llm import BaseChatLanguageModel
 from arkitect.core.component.llm.model import (
@@ -224,8 +224,8 @@ async def default_model_calling(
                 sample_rate=24000,
             ),
         ),
-        access_key=access_key,
-        app_key=app_key,
+        access_key=TTS_ACCESS_TOKEN,
+        app_key=TTS_APP_ID,
         conn_id=get_reqid(),
         log_id=get_reqid(),
     )
