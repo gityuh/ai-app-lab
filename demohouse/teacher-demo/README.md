@@ -34,8 +34,7 @@
 | 相关服务 | 描述 | 计费说明 |
 | --- | --- | --- |
 | [Doubao-流式语音识别](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=seedasr-streaming) | 将用户的语音提问转写为文本，以便于视觉大模型对用户问题的理解与回复。 | [多种计费方式](https://www.volcengine.com/docs/82379/1099320) |
-| [Doubao-1.5-vision-pro-32k](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=doubao-1-5-vision-pro-32k) | 负责对题目内容进行视觉理解，并输出题目内容 | [多种计费方式](https://www.volcengine.com/docs/82379/1099320) |\
-||
+| [Doubao-1.5-vision-pro-32k](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=doubao-1-5-vision-pro-32k) | 负责对题目内容进行视觉理解，并输出题目内容 | [多种计费方式](https://www.volcengine.com/docs/82379/1099320) 
 | [DeepSeek-R1](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=deepseek-r1) | 负责对题目进行深度思考和AI解析，并生成答案。 | [多种计费方式](https://www.volcengine.com/docs/82379/1099320) |
 | [Doubao-语音合成](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=ve-tts) | 负责将模型生成的文本回答转化为自然流畅的语音输出。 | [多种计费方式](https://www.volcengine.com/docs/82379/1099320) |\
 
