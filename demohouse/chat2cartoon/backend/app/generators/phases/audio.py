@@ -175,7 +175,7 @@ class AudioGenerator(Generator):
 
             # upload audio to tos as an mp3 file
             # media files are uploaded to TOS to avoid occupying too much local memory
-            # in the event when a large umber of requests are made in parallel
+            # in the event when a large number of requests are made in parallel
             tos_bucket_name = ARTIFACT_TOS_BUCKET
             tos_object_key = f"{get_reqid()}/{Phase.AUDIO.value}/{index}.mp3"
             self.tos_client.put_object(tos_bucket_name, tos_object_key, audio_bytes)

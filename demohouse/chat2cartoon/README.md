@@ -171,7 +171,7 @@ user 请求的 `content` 格式都按照：`{模式} {内容}`
     - CONFIRMATION：确认进入到下一步
     - REGENERATION：对当前步骤或前序步骤进行修改
 - 内容：完整状态的 JSON text 完整状态由前端维护，保存下来当前对话中的脚本信息（storyboards），视频信息（videos）， 
-       音频信息（audios）等。在下一步需要时通过 `user` 消息传入。JSON 内容的格式可以参考 [app/models](./app/models) 目录里的代码。如果模式是 REGENERATION，内容需要加上 `phase={状态}` 
+       音频信息（audios）等。在下一步需要时通过 `user` 消息传入。JSON 内容的格式可以参考 [app/models](./backend/app/models) 目录里的代码。如果模式是 REGENERATION，内容需要加上 `phase={状态}` 
        的前缀来指定要重新生成的 Phase 产物，例如：`"REGENERATION phase=RoleImage {"role_descriptions":"「N个角色，角色描述」"}"`
 
 ##### `assistant` 消息

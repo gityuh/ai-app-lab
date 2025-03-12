@@ -146,7 +146,7 @@ async def chat_with_branches(
     context_id: str,
 ) -> AsyncIterable[Union[ArkChatCompletionChunk, ArkChatResponse]]:
     """
-    Launch two tasks to attempt asnwering with/without long term memory
+    Launch two tasks to attempt answering with/without long term memory
 
     If VLM can answer with current frame only, use VLM's answer.
     If VLM cannot answer, use the answer with long term memory (from LLM)
@@ -157,7 +157,7 @@ async def chat_with_branches(
     )
     can_response, vlm_iter = await vlm_task
     if can_response:
-        logger.info("vlm responded, using vlm's anwser")
+        logger.info("vlm responded, using vlm's answer")
         llm_task.cancel()
         return vlm_iter
     else:
