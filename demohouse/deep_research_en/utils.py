@@ -17,8 +17,6 @@ import volcenginesdkarkruntime.types.chat.chat_completion_chunk as completion_ch
 
 from arkitect.core.component.llm.model import ArkMessage, ArkChatCompletionChunk
 
-from config import WORK_LANG
-
 
 def cast_content_to_reasoning_content(
     chunk: ArkChatCompletionChunk,
@@ -53,9 +51,7 @@ def get_last_message(messages: List[ArkMessage], role: str):
 
 
 def get_current_date() -> str:
-    if WORK_LANG == "EN":
-        return f"current date: {datetime.now().strftime('%Y-%m-%d')}"
-    return f"当前时间：{datetime.now().strftime('%Y年%m月%d日')}"
+    return f"current date: {datetime.now().strftime('%Y-%m-%d')}"
 
 
 def gen_metadata_chunk(metadata: dict) -> ArkChatCompletionChunk:

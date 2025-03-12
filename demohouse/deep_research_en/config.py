@@ -22,7 +22,6 @@ REASONING_MODEL_ENDPOINT_ID = (
 # optional, if you select tavily as search engine, please configure this
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY") or "{YOUR_TAVILY_API_KEY}"
 
-WORK_LANG = os.getenv("WORK_LANG") or "EN"
 """
 for webui
 """

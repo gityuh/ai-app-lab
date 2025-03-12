@@ -11,7 +11,6 @@
 
 from typing import Dict, List, AsyncIterable
 
-from config import WORK_LANG
 from jinja2 import Template
 from pydantic import BaseModel, Field
 from typing_extensions import Optional
@@ -272,6 +271,6 @@ class DeepResearch(BaseModel):
 
     @classmethod
     def check_query(cls, output: str) -> Optional[List[str]]:
-        if ("无需" if WORK_LANG == "ZH" else "No need to search") in output:
+        if "No need to search" in output:
             return None
         return [o.strip() for o in output.split(";")]
