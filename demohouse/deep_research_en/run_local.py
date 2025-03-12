@@ -29,7 +29,7 @@ SEARCH_ENGINE = "tavily"
 # optional, if you select tavily as search engine, please configure this
 TAVILY_API_KEY = "{YOUR_TAVILY_API_KEY}"
 
-QUERY = "找到2023年中国GDP超过万亿的城市，详细分析其中排名后十位的城市的增长率和GDP构成，并结合各城市规划预测5年后这些城市的GDP排名可能会如何变化"
+QUERY = "research on latest trending projects related to LLM application development"
 
 
 async def main():

@@ -22,14 +22,14 @@ import asyncio
 class TavilySearchEngine(SearchEngine, ABC):
 
     def __init__(
-            self,
-            api_key: str,
-            search_depth: Literal["basic", "advanced"] = "basic",
-            topic: Literal["general", "news"] = "general",
-            days: int = 3,
-            max_results: int = 5,
-            include_domains: Optional[str] = None,
-            exclude_domains: Optional[str] = None,
+        self,
+        api_key: str,
+        search_depth: Literal["basic", "advanced"] = "basic",
+        topic: Literal["general", "news"] = "general",
+        days: int = 3,
+        max_results: int = 5,
+        include_domains: Optional[str] = None,
+        exclude_domains: Optional[str] = None,
     ):
         super().__init__()
         self._tavily_client = TavilyClient(api_key=api_key)
@@ -46,9 +46,7 @@ class TavilySearchEngine(SearchEngine, ABC):
     async def asearch(self, queries: List[str]) -> List[SearchResult]:
         tasks = [self._arun_search_single(query) for query in queries]
         task_results = await asyncio.gather(*tasks)
-        return [
-            r for r in task_results
-        ]
+        return [r for r in task_results]
 
     async def _arun_search_single(self, query: str) -> SearchResult:
         return await asyncio.to_thread(self._search_single, query)
@@ -72,9 +70,9 @@ class TavilySearchEngine(SearchEngine, ABC):
     def _format_result(cls, tavily_result: dict) -> str:
         results = tavily_result.get("results", [])
         formatted: str = ""
-        for (i, result) in enumerate(results):
-            formatted += f"参考资料{i + 1}: \n"
-            formatted += f"标题: {result.get('title', '')}\n"
-            formatted += f"内容: {result.get('content', '')}\n"
+        for i, result in enumerate(results):
+            formatted += f"Reference{i + 1}: \n"
+            formatted += f"Title: {result.get('title', '')}\n"
+            formatted += f"Content: {result.get('content', '')}\n"
             formatted += "\n"
         return formatted

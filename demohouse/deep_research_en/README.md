@@ -67,77 +67,68 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
 
 3. Edit configuration in `run_local.py`
 
-   - 使用 tavily 作为搜索引擎，配置修改如下
+   - Use tavily as search engine
 
      ```python
-     # Deepseek R1 模型推理接入点，不建议使用蒸馏版本
+     # Deepseek R1 Model Endpoint. Not recommended to use distill version
      REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
-     # 设置使用tavily作为搜索引擎
+     # Use tavily as search engine
      SEARCH_ENGINE = "tavily"
-     # 配置tavily的APIKEY
+     # set your tavily apikey
      TAVILY_API_KEY = "{YOUR_TAVILY_API_KEY}"
-     # 用于测试的问题
-     QUERY = "找到2023年中国GDP超过万亿的城市，详细分析其中排名后十位的城市的增长率和GDP构成，并结合各城市规划预测5年后这些城市的GDP排名可能会如何变化"
+     # Test query
+     QUERY = "research on latest trending projects related to LLM application development"
      ```
 
-4. 设置环境变量`ARK_API_KEY`
+4. Set environment variable `ARK_API_KEY`
 
     ```shell
-    # 填写火山方舟API KEY
+    # YOUR ARK API KEY
     export ARK_API_KEY="{YOUR_ARK_API_KEY}"
     ```
 
-5. 本地运行
+5. Run locally
 
     ```shell
     poetry run run_local.py
     ```
 
-### 方式二：部署为本地服务
+### Method 2: Run as local service
 
-1. 下载代码库
+1. Download code repo
 
     ```shell
     git clone https://github.com/volcengine/ai-app-lab.git
     cd demohouse/deep_research
     ```
 
-2. 修改`server.py`文件中配置
+2. Edit configurations in `server.py`
 
-   - 如果使用火山方舟零代码联网应用作为搜索引擎，配置修改如下
-
-     ```python
-     # Deepseek R1 模型推理接入点，不建议使用蒸馏版本
-     REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
-     # 设置使用火山方舟零代码联网应用作为搜索引擎
-     SEARCH_ENGINE = "volc_bot"
-     # 配置火山方舟零代码联网应用的bot id
-     SEARCH_BOT_ID = "{YOUR_BOT_ID}"
-     ```
-
-   - 如果使用 tavily 作为搜索引擎，配置修改如下
+   - Use tavily as search engine
 
      ```python
-     # Deepseek R1 模型推理接入点，不建议使用蒸馏版本
+     # Deepseek R1 Model Endpoint. Not recommended to use distill version
      REASONING_EP_ID = "{YOUR_ENDPOINT_ID}"
-     # 设置使用tavily作为搜索引擎
+     # Use tavily as search engine
      SEARCH_ENGINE = "tavily"
-     # 配置tavily的APIKEY
-     TAVILY_API_KEY = "{YOUR_TAVILY_API_KEY}"  
+     # set your tavily apikey
+     TAVILY_API_KEY = "{YOUR_TAVILY_API_KEY}"
+     # Test query
+     QUERY = "research on latest trending projects related to LLM application development"
      ```
 
-3. 设置环境变量`ARK_API_KEY`
+3. Set environment variable `ARK_API_KEY`
 
     ```shell
-    # 填写火山方舟API KEY
+    # YOUR ARK API KEY
     export ARK_API_KEY="{YOUR_ARK_API_KEY}"
     ```
 
-4. 安装项目依赖并运行
+4. Install project dependencies
 
-    > 说明
+    > Note
     >
-    > 默认在 localhost:8888 提供符合 openAI 规范的 chatAPI 服务
+    > Server default runs on localhost:8888, providing OpenAI compatible API
 
     ```shell
     python -m venv .venv
@@ -149,12 +140,12 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
     poetry run python -m server
     ```
 
-5. 使用 openAI client 访问 API ，示例代码如下
+5. Call your local service with OpenAI sdk
 
     ```python
     from openai import OpenAI
     
-    # 注意baseUrl
+    # change base_url to xxx/bots
     client = OpenAI(base_url="http://localhost:8888/api/v3/bots")
     
     
@@ -165,7 +156,7 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
             messages=[
                 {
                     "role": "user",
-                    "content": "找到2023年中国GDP超过万亿的城市，详细分析其中排名后十位的城市的增长率和GDP构成，并结合各城市规划预测5年后这些城市的GDP排名可能会如何变化",
+                    "content": "research on latest trending projects related to LLM application development",
                 }
             ],
             stream=True,
@@ -174,16 +165,16 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
         thinking = False
     
         for chunk in stream_resp:
-            if chunk.choices[0].delta.reasoning_content:
-                if not thinking:
-                    print("\n----思考过程----\n")
-                    thinking = True
-                print(chunk.choices[0].delta.reasoning_content, end="")
-            elif chunk.choices[0].delta.content:
+            if chunk.choices[0].delta.content:
                 if thinking:
-                    print("\n----输出回答----\n")
+                    print("\n----Final Answer----\n")
                     thinking = False
                 print(chunk.choices[0].delta.content, end="")
+            elif chunk.choices[0].delta.reasoning_content:
+                if not thinking:
+                    print("\n----Thinking----\n")
+                    thinking = True
+                print(chunk.choices[0].delta.reasoning_content, end="")
     
     
     if __name__ == "__main__":

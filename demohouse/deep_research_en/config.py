@@ -16,11 +16,11 @@ for server
 """
 
 # recommend to use DeepSeek-R1 model
-REASONING_EP_ID = os.getenv("REASONING_EP_ID") or "{YOUR_ENDPOINT_ID}"
+REASONING_EP_ID = os.getenv("REASONING_EP_ID") or "ep-20250304104641-m2fnm"
 # optional, if you select tavily as search engine, please configure this
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY") or "{YOUR_TAVILY_API_KEY}"
-# optional, if you select volc bot as search engine, please configure this
-SEARCH_BOT_ID = os.getenv("SEARCH_BOT_ID") or "{YOUR_SEARCH_BOT_ID}"
+TAVILY_API_KEY = (
+    os.getenv("TAVILY_API_KEY") or "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"
+)
 # optional, change the language
 WORK_LANG = os.getenv("WORK_LANG") or "EN"
 
@@ -30,7 +30,3 @@ for webui
 
 # ark api key
 ARK_API_KEY = os.getenv("ARK_API_KEY") or "{YOUR_ARK_API_KEY}"
-# api server address for web ui
-API_ADDR = os.getenv("API_ADDR") or "https://ark.cn-beijing.volces.com/api/v3/bots"
-# while using remote api, need bot id
-API_BOT_ID = os.getenv("API_BOT_ID") or "{YOUR_API_BOT_ID}"

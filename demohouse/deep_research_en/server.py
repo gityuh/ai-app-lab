@@ -23,16 +23,13 @@ from arkitect.launcher.vefaas import bot_wrapper
 from arkitect.telemetry.trace import task
 from volcenginesdkarkruntime import AsyncArk
 from search_engine.tavily import TavilySearchEngine
-from search_engine.content_plugin import ContentPluginSearchEngine
 from deep_research import DeepResearch, ExtraConfig
 
 from utils import get_last_message
 
 from config import (
     REASONING_EP_ID,
-    SEARCH_ENGINE,
     TAVILY_API_KEY,
-    SEARCH_BOT_ID,
     ARK_API_KEY,
 )
 
