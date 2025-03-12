@@ -71,8 +71,8 @@ class TavilySearchEngine(SearchEngine, ABC):
         results = tavily_result.get("results", [])
         formatted: str = ""
         for i, result in enumerate(results):
-            formatted += f"参考资料{i + 1}: \n"
-            formatted += f"标题: {result.get('title', '')}\n"
-            formatted += f"内容: {result.get('content', '')}\n"
+            formatted += f"Reference{i + 1}: \n"
+            formatted += f"Title: {result.get('title', '')}\n"
+            formatted += f"Content: {result.get('content', '')}\n"
             formatted += "\n"
         return formatted
