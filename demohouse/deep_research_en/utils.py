@@ -21,7 +21,7 @@ from config import WORK_LANG
 
 
 def cast_content_to_reasoning_content(
-        chunk: ArkChatCompletionChunk,
+    chunk: ArkChatCompletionChunk,
 ) -> ArkChatCompletionChunk:
     new_chunk = ArkChatCompletionChunk(**chunk.__dict__)
     new_chunk.choices[0].delta.reasoning_content = chunk.choices[0].delta.content
@@ -60,17 +60,16 @@ def get_current_date() -> str:
 
 def gen_metadata_chunk(metadata: dict) -> ArkChatCompletionChunk:
     return ArkChatCompletionChunk(
-        id='',
+        id="",
         created=int(time.time()),
-        model='',
-        object='chat.completion.chunk',
-        choices=[completion_chunk.Choice(
-            index=0,
-            delta=completion_chunk.ChoiceDelta(
-                content="",
-                reasoning_content=""
-            ),
-        )],
+        model="",
+        object="chat.completion.chunk",
+        choices=[
+            completion_chunk.Choice(
+                index=0,
+                delta=completion_chunk.ChoiceDelta(content="", reasoning_content=""),
+            )
+        ],
         metadata=metadata,
     )
 

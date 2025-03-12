@@ -21,7 +21,7 @@ def main():
         messages=[
             {
                 "role": "user",
-                "content": "帮我查一下2024年11月上市的智能手机的价格，并给出一篇有关其中最便宜的一款的网络评测",
+                "content": "research on latest trending projects related to LLM application development",
             }
         ],
         stream=True,
@@ -30,16 +30,17 @@ def main():
     thinking = False
 
     for chunk in stream_resp:
-        if chunk.choices[0].delta.reasoning_content:
+        if chunk.choices[0].delta.model_extra.get("reasoning_content"):
             if not thinking:
-                print("\n----思考过程----\n")
+                print("\n----Thinking Process----\n")
                 thinking = True
-            print(chunk.choices[0].delta.reasoning_content, end="")
+            content = chunk.choices[0].delta.model_extra.get("reasoning_content", "")
+            print(content, end="", flush=True)
         elif chunk.choices[0].delta.content:
             if thinking:
-                print("\n----输出回答----\n")
+                print("\n----Final Answer----\n")
                 thinking = False
-            print(chunk.choices[0].delta.content, end="")
+            print(chunk.choices[0].delta.content, end="", flush=True)
 
 
 if __name__ == "__main__":

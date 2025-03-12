@@ -28,7 +28,7 @@ from deep_research import DeepResearch, ExtraConfig
 from utils import get_last_message
 
 from config import (
-    REASONING_EP_ID,
+    REASONING_MODEL_ENDPOINT_ID,
     TAVILY_API_KEY,
     ARK_API_KEY,
 )
@@ -55,8 +55,8 @@ async def main(
 
     deep_research = DeepResearch(
         search_engine=search_engine,
-        planning_endpoint_id=REASONING_EP_ID,
-        summary_endpoint_id=REASONING_EP_ID,
+        planning_endpoint_id=REASONING_MODEL_ENDPOINT_ID,
+        summary_endpoint_id=REASONING_MODEL_ENDPOINT_ID,
         extra_config=ExtraConfig(
             # optional, the max search words for each planning rounds
             max_search_words=max_search_words,

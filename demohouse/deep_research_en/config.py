@@ -16,17 +16,18 @@ for server
 """
 
 # recommend to use DeepSeek-R1 model
-REASONING_EP_ID = os.getenv("REASONING_EP_ID") or "ep-20250304104641-m2fnm"
-# optional, if you select tavily as search engine, please configure this
-TAVILY_API_KEY = (
-    os.getenv("TAVILY_API_KEY") or "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"
+REASONING_MODEL_ENDPOINT_ID = (
+    os.getenv("REASONING_MODEL_ENDPOINT_ID") or "{YOUR_REASONING_MODEL_ENDPOINT_ID}"
 )
-# optional, change the language
-WORK_LANG = os.getenv("WORK_LANG") or "EN"
+# optional, if you select tavily as search engine, please configure this
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY") or "{YOUR_TAVILY_API_KEY}"
 
+WORK_LANG = os.getenv("WORK_LANG") or "EN"
 """
 for webui
 """
 
 # ark api key
 ARK_API_KEY = os.getenv("ARK_API_KEY") or "{YOUR_ARK_API_KEY}"
+# api server address for web ui
+API_ADDR = os.getenv("API_ADDR") or "http://localhost:8888/api/v3/bots"

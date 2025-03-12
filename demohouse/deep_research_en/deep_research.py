@@ -11,6 +11,7 @@
 
 from typing import Dict, List, AsyncIterable
 
+from config import WORK_LANG
 from jinja2 import Template
 from pydantic import BaseModel, Field
 from typing_extensions import Optional
@@ -27,18 +28,12 @@ from arkitect.telemetry.logger import INFO
 
 from search_engine import SearchEngine, SearchResult
 from search_engine.tavily import TavilySearchEngine
-from prompt import (
-    DEFAULT_PLANNING_PROMPT,
-    DEFAULT_SUMMARY_PROMPT,
-    DEFAULT_SUMMARY_PROMPT_EN,
-    DEFAULT_PLANNING_PROMPT_EN,
-)
+from prompt import DEFAULT_PLANNING_PROMPT, DEFAULT_SUMMARY_PROMPT
 from utils import (
     get_current_date,
     cast_content_to_reasoning_content,
     gen_metadata_chunk,
 )
-from config import WORK_LANG
 
 """
 ResultsSummary is using to store the result searched so far
@@ -65,11 +60,7 @@ class ResultsSummary(BaseModel):
         output = ""
 
         for key, value in self.ref_dict.items():
-            output += (
-                f"\n【查询 “{key}” 得到的相关资料】"
-                if WORK_LANG == "ZH"
-                else f"\n[results of searching <{key}>]"
-            )
+            output += f"\n【Searching “{key}” result】"
             output += "\n".join([v.summary_content for v in value])
 
         return output
@@ -81,13 +72,9 @@ class ExtraConfig(BaseModel):
     # max_search_words
     max_search_words: int = 5
     # planning_template (prompt)
-    planning_template: Template = (
-        DEFAULT_PLANNING_PROMPT if WORK_LANG == "ZH" else DEFAULT_PLANNING_PROMPT_EN
-    )
+    planning_template: Template = DEFAULT_PLANNING_PROMPT
     # summary_template (prompt)
-    summary_template: Template = (
-        DEFAULT_SUMMARY_PROMPT if WORK_LANG == "ZH" else DEFAULT_SUMMARY_PROMPT_EN
-    )
+    summary_template: Template = DEFAULT_SUMMARY_PROMPT
 
     class Config:
         """Configuration for this pydantic object."""
@@ -250,7 +237,9 @@ class DeepResearch(BaseModel):
     ) -> ArkChatResponse:
         llm = BaseChatLanguageModel(
             endpoint_id=self.summary_endpoint_id,
-            template=CustomPromptTemplate(template=self.extra_config.summary_template),
+            template=CustomPromptTemplate(
+                template=self.extra_config.summary_template or DEFAULT_SUMMARY_PROMPT
+            ),
             messages=request.messages,
         )
 
@@ -265,13 +254,11 @@ class DeepResearch(BaseModel):
     ) -> AsyncIterable[ArkChatCompletionChunk]:
         llm = BaseChatLanguageModel(
             endpoint_id=self.summary_endpoint_id,
-            template=CustomPromptTemplate(
-                template=self.extra_config.summary_template or DEFAULT_SUMMARY_PROMPT
-            ),
+            template=CustomPromptTemplate(template=self.extra_config.summary_template),
             messages=request.messages,
         )
 
-        INFO("----- 联网资料 -----")
+        INFO("----- Search result -----")
         INFO(f"{references.to_plaintext()}")
 
         stream = llm.astream(
