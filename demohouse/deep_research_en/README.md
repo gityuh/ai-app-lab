@@ -106,7 +106,7 @@ Deep Research 是一款专为应对复杂问题而设计的高效工具，利用
     # start web ui
     poetry run python -m webui
     ```
-5. Open browsing and visit `http://localhost:7860/` 
+5. Open browser and visit `http://localhost:7860/` 
 
     ![img.png](docs/webui.png)
 
