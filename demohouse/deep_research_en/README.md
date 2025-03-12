@@ -6,17 +6,16 @@ Deep Research is a high-efficiency tool built for tackling complex problems. Pow
 
 | Type  | Service Name  | Billing Rules      |
 | ------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Model | Deepseek - r1 | 500K tokens are given as a free quota upon activation. For usage exceeding this amount, payment is based on the token consumption. For detailed pricing, refer to the billing description. |
+| Model | Deepseek - r1 | 500K tokens are given as a free quota upon activation. For usage exceeding this amount, payment is based on the token consumption. For detailed pricing, refer to the [billing description](https://docs.byteplus.com/en/docs/ModelArk/1099320). |
 | Search API | Tavily | Pricing |
 
 ## Environment Setup
 
 - Poetry Version: 1.6.1
 - Python Version: ≥ 3.8.1 and < 3.12
-- Reference document for Byteplus Ark API KEY
-- Reference document for Byteplus AK SK
-- Reference document for creating Inference Endpoint of DeepSeek-R1 Model
-- (Optional) Reference document  for open-source Search Engine Tavily APIKEY
+- **Generate an API Key:** Follow the [Obtaining API Key](https://docs.byteplus.com/en/docs/ModelArk/1399008#_1-obtaining-and-configuring-api-key).
+- **Create an Inference** **Endpoint** of DeepSeek-R1 Model: Log in to the [ModelArk Console](https://console.byteplus.com/ark/region:ark-stg+ap-southeast-1/endpoint?projectName=default) and create an endpoint.
+- (Optional) Get an API key of open-source Search Engine [Tavily](https://app.tavily.com/home)
 
 ## Quick Start
 
