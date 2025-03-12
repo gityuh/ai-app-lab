@@ -4,8 +4,7 @@ Deep Research is a high-efficiency tool built for tackling complex problems. Pow
 
 ## Expense Details
 
-
-| Type  | Service Name  | Billing Rules                                                                                                                                                                              |
+| Type  | Service Name  | Billing Rules      |
 | ------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Model | Deepseek - r1 | 500K tokens are given as a free quota upon activation. For usage exceeding this amount, payment is based on the token consumption. For detailed pricing, refer to the billing description. |
 | Search API | Tavily | Pricing |
@@ -27,23 +26,23 @@ Deep Research is a high-efficiency tool built for tackling complex problems. Pow
    git clone https://github.com/volcengine/ai-app-lab.git
    cd demohouse/deep_research
    ```
+
 2. Set environment variables
 
-   - use tavily as search engine
+    ```shell
+    # YOUR ARK API KEY
+    export ARK_API_KEY=xxx-xxxx-xxx-xxx
 
-     ```shell
-     # YOUR ARK API KEY
-     export ARK_API_KEY=xxx-xxxx-xxx-xxx
+    # your deepseek-r1 model endpoint id
+    export REASONING_MODEL_ENDPOINT_ID=ep-xxxxxxxx-xxx
 
-     # your deepseek-r1 model endpoint id
-     export REASONING_MODEL_ENDPOINT_ID=ep-xxxxxxxx-xxx
+    # set tavily as search engine
+    export SEARCH_ENGINE=tavily
 
-     # set tavily as search engine
-     export SEARCH_ENGINE=tavily
+    # set your tavily APIKEY
+    export TAVILY_API_KEY=xxx-xxx-xxx-xxx
+    ```
 
-     # set your tavily APIKEY
-     export TAVILY_API_KEY=xxx-xxx-xxx-xxx
-     ```
 3. Install dependencies
 
    > Note
@@ -58,6 +57,7 @@ Deep Research is a high-efficiency tool built for tackling complex problems. Pow
    poetry install
    poetry run python -m server
    ```
+
 4. Start webui
 
    ```shell
@@ -71,6 +71,7 @@ Deep Research is a high-efficiency tool built for tackling complex problems. Pow
    # start web ui
    poetry run python -m webui
    ```
+
 5. Open browser and visit `http://localhost:7860/`
 
    ![img.png](docs/webui.png)
@@ -92,7 +93,7 @@ The model outputs from the thinking stage will be integrated into the reasoning_
 
 ## Project Structure
 
-```
+```shell
 ├── README.md
 ├── __init__.py
 ├── config.py
