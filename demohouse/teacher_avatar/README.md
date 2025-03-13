@@ -9,12 +9,12 @@
 [视频地址](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_sth/ljhwZthlaukjlkulzlp/ark/assistant/videos/20250311-163309.mp4)
 ### 直接体验
 
-![](0.png)
+![](assets/0.png)
 
 ### 流程架构
 
 
-![](1.png)
+![](assets/1.png)
 
 
 **极简开发的场景化赋能**
@@ -44,16 +44,18 @@
 # 技术实现
 
 
-教师分身应用包括 Android 客户端和 Web 前端两部分：
+教师分身应用包括 Android 客户端、 Web 前端和Python后端三部分：
 
 - Android 端主要提供 Web 页面容器、题目分割、语音合成、语音识别等能力
 	
 - Web 前端主要提供识别题目的UI交互页面以及与大模型交互的题目解析页面等
+
+- Python 后端主要提供具有解题、批改、聊天能力的智能体接口
 	
 
 <br>
 
-本项目开源了教师分身应用中的 Web 前端代码。Web 前端基于 React 技术栈实现，负责处理大模型对话（文本+图片）、大模型流式输出、用户语音输入等模块。开发者可参考此工程的大模型接口调用、会话管理等逻辑，将其方便地移植到其他前端工程，提高开发效率。
+本项目开源了教师分身应用中的 Web 前端代码和Python后端代码。Web 前端基于 React 技术栈实现，负责处理大模型对话（文本+图片）、大模型流式输出、用户语音输入等模块。开发者可参考此工程的大模型接口调用、会话管理等逻辑，将其方便地移植到其他前端工程，提高开发效率。Python后端代码基于arkitect sdk实现对于Doubao-1.5-vision-pro-32k模型和DeepSeek R1模型的编排，开发者可以参照相关实现，编排相应模型。
 <br>
 
 备注：由于本项目运行依赖部分内部实现，此开源工程暂时无法整体编译运行。
@@ -61,21 +63,68 @@
 ### 核心模块
 
 ```Shell
-├── src
-│   ├── api                             
-│   │   ├── bridge.ts                   # 原生 API 桥接层
-│   │   └── llm.ts                      # LLM 对话实现
-│   ├── pages
-│   │   └── entry                       # webview 总入口
-│   │       ├── components
-│   │       ├── context                 # 全局状态管理
-│   │       ├── index.css
-│   │       ├── index.tsx
-│   │       ├── routes                  # 组件级页面路由
-│   │       │   ├── confirm            # 确认页面
-│   │       │   ├── recognition        # 识别中页面
-│   │       │   └── recognition-result # 题目解析页面
-│   │       └── utils.ts
+├── backend			# 后端代码
+│   ├── code
+│   │   ├── main.py		# 智能体编排
+│   │   └── prompts.py		# 提示词
+│   ├── poetry.lock
+│   ├── pyproject.toml
+│   └── run.sh			# 启动脚本
+└── frontend			# 前端代码
+    ├── src
+    │   ├── agent
+    │   │   └── index.ts
+    │   ├── api
+    │   │   ├── bridge.ts 	# 原生 API 桥接层
+    │   │   └── llm.ts 		# LLM 对话实现
+    │   ├── app.ts
+    │   ├── pages
+    │   │   └── entry 		# webview 总入口
+    │   │       ├── components
+    │   │       ├── context 	# 全局状态管理
+    │   │       ├── index.css
+    │   │       ├── index.tsx
+    │   │       ├── routes 	# 组件级页面路由
+    │   │       └── utils.ts
+```
+
+## 后端模型编排实现
+main.py 实现对于Doubao-1.5-vision-pro-32k模型和DeepSeek R1模型的编排，利用视觉模型识别题目内容，利用DeepSeek模型进行逻辑推理，生成答案。
+```python
+doubao_vlm = BaseChatLanguageModel(
+        endpoint_id=DOUBAO_VLM_ENDPOINT,
+        messages=[
+            ArkMessage(
+                role="system",
+                content=vlm_prompt,
+            )
+        ]
+        + request.messages,
+        parameters=parameters,
+    )
+    vlm_usage_chunk = None
+    vlm_content = ""
+    async for chunk in doubao_vlm.astream():
+        if chunk.usage:
+            vlm_usage_chunk = chunk
+        if len(chunk.choices) > 0 and chunk.choices[0].delta.content:
+            yield chunk
+            vlm_content += chunk.choices[0].delta.content
+    deepseek = BaseChatLanguageModel(
+        endpoint_id=DEEPSEEK_R1_ENDPOINT,
+        messages=[
+            ArkMessage(
+                role="user",
+                content=r1_prompt + vlm_content,
+            ),
+        ],
+        parameters=parameters,
+    )
+    async for chunk in deepseek.astream():
+        if chunk.usage and vlm_usage_chunk:
+            chunk.bot_usage = BotUsage(model_usage=[vlm_usage_chunk.usage, chunk.usage])
+            chunk.usage = merge_usage(chunk.usage, vlm_usage_chunk.usage)
+        yield chunk
 ```
 
 ## 对话实现
@@ -282,30 +331,27 @@ export default definePage({
 ## 目录结构
 ```Bash
 .
-├── applet.config.ts
-├── package.json                          # 项目依赖包管理
-├── pnpm-lock.yaml
-├── postcss.config.cjs
-├── src
-│   ├── api                             
-│   │   ├── bridge.ts                   # 原生 API 桥接层
-│   │   └── llm.ts                      # LLM 对话实现
-│   ├── app.ts
-│   ├── components
-│   ├── images
-│   ├── pages
-│   │   └── entry                       # webview 总入口
-│   │       ├── components
-│   │       ├── context                 # 全局状态管理
-│   │       ├── index.css
-│   │       ├── index.tsx
-│   │       ├── routes                  # 组件级页面路由
-│   │       │   ├── confirm            # 确认页面
-│   │       │   ├── recognition        # 识别中页面
-│   │       │   └── recognition-result # 题目解析页面
-│   │       └── utils.ts
-│   └── types
-│       └── index.ts
-├── tailwind.config.js                   # tailwind 配置
-└── tsconfig.json
+├── backend			# 后端代码
+│   ├── code
+│   │   ├── main.py		# 智能体编排
+│   │   └── prompts.py		# 提示词
+│   ├── poetry.lock
+│   ├── pyproject.toml
+│   └── run.sh			# 启动脚本
+└── frontend			# 前端代码
+    ├── src
+    │   ├── agent
+    │   │   └── index.ts
+    │   ├── api
+    │   │   ├── bridge.ts 	# 原生 API 桥接层
+    │   │   └── llm.ts 		# LLM 对话实现
+    │   ├── app.ts
+    │   ├── pages
+    │   │   └── entry 		# webview 总入口
+    │   │       ├── components
+    │   │       ├── context 	# 全局状态管理
+    │   │       ├── index.css
+    │   │       ├── index.tsx
+    │   │       ├── routes 	# 组件级页面路由
+    │   │       └── utils.ts
 ```
