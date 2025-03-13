@@ -210,7 +210,7 @@ class AsyncASRClient(BaseAsyncASRClient, ABC):
         audio_only_bytes.extend(struct.pack(">I", len(payload_bytes)))
         audio_only_bytes.extend(payload_bytes)  # payload
         await self.conn.send(audio_only_bytes)
-        INFO(f"Sent Data INFO ASR SEVER data len={len(payload_bytes)}")
+        INFO(f"Sent Data INFO ASR SERVER data len={len(payload_bytes)}")
 
     async def _receive_response(self) -> Optional[ASRFullServerResponse]:
         if not self.conn:
