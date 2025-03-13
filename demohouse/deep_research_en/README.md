@@ -7,7 +7,7 @@ Deep Research is a high-efficiency tool built for tackling complex problems. Pow
 | Type  | Service Name  | Billing Rules      |
 | ------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Model | Deepseek - r1 | 500K tokens are given as a free quota upon activation. For usage exceeding this amount, payment is based on the token consumption. For detailed pricing, refer to the [billing description](https://docs.byteplus.com/en/docs/ModelArk/1099320). |
-| Search API | Tavily | Pricing |
+| Search API | Tavily | [Pricing](https://tavily.com/#pricing) |
 
 ## Environment Setup
 
