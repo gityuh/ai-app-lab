@@ -5,7 +5,7 @@
 
 ### Introduction
 
-**Arkitect** **SDK** empowers enterprise developers with the tools and workflows needed to build and scale large-model applications. With Arkitect SDK and code examples, you can quickly create solutions tailored to your business needs
+**Arkitect** **SDK** empowers enterprise developers with the tools and workflows needed to build and scale large-model applications. With Arkitect SDK and code examples, you can quickly create solutions tailored to your business needs.
 
 ### Advantages
 
@@ -62,25 +62,37 @@ from arkitect.core.component.llm import BaseChatLanguageModel
 from arkitect.core.component.llm.model import ArkChatRequest, ArkChatResponse, ArkChatCompletionChunk, ArkChatParameters, Response
 from arkitect.launcher.local.serve import launch_serve
 from arkitect.telemetry.trace import task
+
 endpoint_id = "<YOUR ENDPOINT ID>"
+
 @task()
 async def default_model_calling(request: ArkChatRequest) -> AsyncIterable[Union[ArkChatCompletionChunk, ArkChatResponse]]:
-    parameters = ArkChatParameters(**request.
-__dict__
-)
-    llm = BaseChatLanguageModel(endpoint_id=endpoint_id, messages=request.messages, parameters=parameters)
+    parameters = ArkChatParameters(**request.__dict__)
+    llm = BaseChatLanguageModel(
+        endpoint_id=endpoint_id,
+        messages=request.messages,
+        parameters=parameters,
+    )
     if request.stream:
         async for resp in llm.astream():
             yield resp
     else:
         yield await llm.arun()
-if 
-name
- == "
-__main__
-":
+
+@task()
+async def main(request: ArkChatRequest) -> AsyncIterable[Response]:
+    async for resp in default_model_calling(request):
+        yield resp
+
+if __name__ == "__main__":
     port = os.getenv("_FAAS_RUNTIME_PORT")
-    launch_serve(package_path="main", port=int(port) if port else 8080)
+    launch_serve(
+        package_path="main",
+        port=int(port) if port else 8080,
+        health_check_path="/v1/ping",
+        endpoint_path="/api/v3/bots/chat/completions",
+        clients={},
+    )
 ```
 
 5. **Set API Key and Start Server:**
