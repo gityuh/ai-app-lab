@@ -5,7 +5,7 @@
 
 ### Introduction
 
-**Arkitect** **SDK** empowers enterprise developers with the tools and workflows needed to build and scale large-model applications. With Arkitect SDK and code examples, you can quickly create solutions tailored to your business needs
+**Arkitect** **SDK** empowers enterprise developers with the tools and workflows needed to build and scale large-model applications. With Arkitect SDK and code examples, you can quickly create solutions tailored to your business needs.
 
 ### Advantages
 
@@ -51,8 +51,8 @@
   pip install arkitect --index-url https://pypi.org/simple
   ```
 
-2. **Create an Inference** **Endpoint**: Log in to the [Ark Console](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default) and create an endpoint. (For BytePlus users, please refer to the [ModelArk Console](https://console.byteplus.com/ark/region:ark-stg+ap-southeast-1/endpoint?projectName=default))
-3. **Generate an API Key:** Follow the [API Key guide](https://www.volcengine.com/docs/82379/1399008#_1-获取并配置-api-key). (For BytePlus users, please refer to the  [Obtaining API Key](https://docs.byteplus.com/en/docs/ModelArk/1399008#_1-obtaining-and-configuring-api-key))
+2. **Create an Inference** **Endpoint**: Log in to the [Ark Console](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?projectName=default) and create an endpoint. 
+3. **Generate an API Key:** Follow the [API Key guide](https://www.volcengine.com/docs/82379/1399008#_1-获取并配置-api-key). 
 4. **Create** **`main.py`**: Replace `endpoint_id` with your newly created endpoint ID.
 
 ```Python
@@ -62,25 +62,37 @@ from arkitect.core.component.llm import BaseChatLanguageModel
 from arkitect.core.component.llm.model import ArkChatRequest, ArkChatResponse, ArkChatCompletionChunk, ArkChatParameters, Response
 from arkitect.launcher.local.serve import launch_serve
 from arkitect.telemetry.trace import task
+
 endpoint_id = "<YOUR ENDPOINT ID>"
+
 @task()
 async def default_model_calling(request: ArkChatRequest) -> AsyncIterable[Union[ArkChatCompletionChunk, ArkChatResponse]]:
-    parameters = ArkChatParameters(**request.
-__dict__
-)
-    llm = BaseChatLanguageModel(endpoint_id=endpoint_id, messages=request.messages, parameters=parameters)
+    parameters = ArkChatParameters(**request.__dict__)
+    llm = BaseChatLanguageModel(
+        endpoint_id=endpoint_id,
+        messages=request.messages,
+        parameters=parameters,
+    )
     if request.stream:
         async for resp in llm.astream():
             yield resp
     else:
         yield await llm.arun()
-if 
-name
- == "
-__main__
-":
+
+@task()
+async def main(request: ArkChatRequest) -> AsyncIterable[Response]:
+    async for resp in default_model_calling(request):
+        yield resp
+
+if __name__ == "__main__":
     port = os.getenv("_FAAS_RUNTIME_PORT")
-    launch_serve(package_path="main", port=int(port) if port else 8080)
+    launch_serve(
+        package_path="main",
+        port=int(port) if port else 8080,
+        health_check_path="/v1/ping",
+        endpoint_path="/api/v3/bots/chat/completions",
+        clients={},
+    )
 ```
 
 5. **Set API Key and Start Server:**
