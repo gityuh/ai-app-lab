@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import contextvars
 import inspect
 import time
 from functools import wraps
@@ -31,6 +32,9 @@ from arkitect.utils.context import (
 
 T = TypeVar("T", covariant=True)
 tracer = trace.get_tracer(__name__)
+_current_span_context: contextvars.ContextVar = contextvars.ContextVar(
+    "current_span_context"
+)
 
 
 def get_remote_func(func):  # type: ignore
@@ -74,7 +78,12 @@ def task(
 
     def task_wrapper(func):  # type: ignore
         async def async_exec(*args: Any, **kwargs: Any) -> Any:
-            with tracer.start_as_current_span(name=func.__qualname__) as span:
+            parent_ctx = _current_span_context.get(None)
+            with tracer.start_as_current_span(
+                name=func.__qualname__, context=parent_ctx
+            ) as span:
+                _current_span_context.set(trace.set_span_in_context(span))
+
                 input = _update_kwargs(args, kwargs, func)
                 try:
                     result = await (get_remote_func(func) if distributed else func)(
@@ -98,7 +107,12 @@ def task(
                     raise e
 
         def sync_exec(*args: Any, **kwargs: Any) -> Any:
-            with tracer.start_as_current_span(name=func.__qualname__) as span:
+            parent_ctx = _current_span_context.get(None)
+            with tracer.start_as_current_span(
+                name=func.__qualname__, context=parent_ctx
+            ) as span:
+                _current_span_context.set(trace.set_span_in_context(span))
+
                 input = _update_kwargs(args, kwargs, func)
                 try:
                     result = func(*args, **kwargs)
@@ -121,9 +135,13 @@ def task(
 
         @wraps(func)
         async def async_iter_task(*args: Any, **kwargs: Any) -> AsyncGenerator[T, None]:
+            parent_ctx = _current_span_context.get(None)
             span = tracer.start_span(
-                name=func.__qualname__ + ".first_iter", start_time=time.time_ns()
+                name=func.__qualname__ + ".first_iter",
+                start_time=time.time_ns(),
+                context=parent_ctx,
             )
+            _current_span_context.set(trace.set_span_in_context(span))
             input = _update_kwargs(args, kwargs, func)
             try:
                 async for i, resp in aenumerate(func(*args, **kwargs)):  # type: ignore
@@ -142,12 +160,17 @@ def task(
                             custom_attributes=custom_attributes,
                         )
                         span.end(end_time=time.time_ns())
+                        _current_span_context.set(parent_ctx)
                     yield resp
 
                     if trace_all:
+                        parent_ctx = _current_span_context.get()
                         span = tracer.start_span(
-                            name=func.__qualname__, start_time=time.time_ns()
+                            name=func.__qualname__,
+                            start_time=time.time_ns(),
+                            context=parent_ctx,
                         )
+                        _current_span_context.set(trace.set_span_in_context(span))
             except Exception as e:
                 if not trace_all:
                     span = tracer.start_span(
@@ -160,7 +183,12 @@ def task(
 
         @wraps(func)
         def iter_task(*args: Any, **kwargs: Any) -> Iterable[T]:
-            span = tracer.start_span(name=func.__qualname__, start_time=time.time_ns())
+            parent_ctx = _current_span_context.get(None)
+            span = tracer.start_span(
+                name=func.__qualname__, start_time=time.time_ns(), context=parent_ctx
+            )
+            _current_span_context.set(trace.set_span_in_context(span))
+
             input = _update_kwargs(args, kwargs, func)
             try:
                 for i, resp in enumerate(func(*args, **kwargs)):
@@ -179,11 +207,16 @@ def task(
                             custom_attributes=custom_attributes,
                         )
                         span.end(end_time=time.time_ns())
+                        _current_span_context.set(parent_ctx)
                     yield resp
                     if trace_all:
+                        parent_ctx = _current_span_context.get()
                         span = tracer.start_span(
-                            name=func.__qualname__, start_time=time.time_ns()
+                            name=func.__qualname__,
+                            start_time=time.time_ns(),
+                            context=parent_ctx,
                         )
+                        _current_span_context.set(trace.set_span_in_context(span))
             except Exception as e:
                 if not trace_all:
                     span = tracer.start_span(
