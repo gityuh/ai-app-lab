@@ -35,6 +35,9 @@ tracer = trace.get_tracer(__name__)
 _current_span_context: contextvars.ContextVar = contextvars.ContextVar(
     "current_span_context"
 )
+_current_span_context_req: contextvars.ContextVar = contextvars.ContextVar(
+    "current_span_context_req", default=""
+)
 
 
 def get_remote_func(func):  # type: ignore
@@ -78,6 +81,8 @@ def task(
 
     def task_wrapper(func):  # type: ignore
         async def async_exec(*args: Any, **kwargs: Any) -> Any:
+            _init_trace_context()
+
             parent_ctx = _current_span_context.get(None)
             with tracer.start_as_current_span(
                 name=func.__qualname__, context=parent_ctx
@@ -101,12 +106,16 @@ def task(
                         account_id=get_account_id(),
                         custom_attributes=custom_attributes,
                     )
+
+                    _current_span_context.set(parent_ctx)
                     return result
                 except Exception as e:
                     handle_exception(span, e, input)
                     raise e
 
         def sync_exec(*args: Any, **kwargs: Any) -> Any:
+            _init_trace_context()
+
             parent_ctx = _current_span_context.get(None)
             with tracer.start_as_current_span(
                 name=func.__qualname__, context=parent_ctx
@@ -128,6 +137,8 @@ def task(
                         account_id=get_account_id(),
                         custom_attributes=custom_attributes,
                     )
+
+                    _current_span_context.set(parent_ctx)
                     return result
                 except Exception as e:
                     handle_exception(span, e, input)
@@ -135,6 +146,8 @@ def task(
 
         @wraps(func)
         async def async_iter_task(*args: Any, **kwargs: Any) -> AsyncGenerator[T, None]:
+            _init_trace_context()
+
             parent_ctx = _current_span_context.get(None)
             span = tracer.start_span(
                 name=func.__qualname__ + ".first_iter",
@@ -180,9 +193,12 @@ def task(
                 raise e
             finally:
                 span.end(end_time=time.time_ns())
+                _current_span_context.set(parent_ctx)
 
         @wraps(func)
         def iter_task(*args: Any, **kwargs: Any) -> Iterable[T]:
+            _init_trace_context()
+
             parent_ctx = _current_span_context.get(None)
             span = tracer.start_span(
                 name=func.__qualname__, start_time=time.time_ns(), context=parent_ctx
@@ -226,6 +242,7 @@ def task(
                 raise e
             finally:
                 span.end(end_time=time.time_ns())
+                _current_span_context.set(parent_ctx)
 
         if inspect.isasyncgenfunction(func):
             return async_iter_task
@@ -252,3 +269,11 @@ def handle_exception(span: trace.Span, exception: Exception, args: Any) -> None:
         client_request_id=get_client_reqid(),
     )
     span.record_exception(exception)
+
+
+def _init_trace_context() -> None:
+    context_req = _current_span_context_req.get("")
+    if context_req != get_reqid():
+        # first time in this req, init context span
+        _current_span_context.set(None)
+        _current_span_context_req.set(get_reqid())
