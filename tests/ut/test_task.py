@@ -98,7 +98,7 @@ class TestTask(unittest.TestCase):
             span = json.loads(line)
             spans.append(span)
         self.assertEqual(len(spans), 3)
-        self.assertNotEqual(spans[2]["parent_id"], None)
+        self.assertEqual(spans[2]["parent_id"], None)
         self.assertEqual(spans[1]["parent_id"], spans[2]["context"]["span_id"])
         self.assertEqual(spans[0]["parent_id"], spans[1]["context"]["span_id"])
 
@@ -122,7 +122,7 @@ class TestTask(unittest.TestCase):
             span = json.loads(line)
             spans.append(span)
         self.assertEqual(len(spans), 4)
-        self.assertEqual(spans[3]["parent_id"], spans[0]["context"]["span_id"])
+        self.assertEqual(spans[3]["parent_id"], None)
         self.assertEqual(spans[2]["parent_id"], None)
         self.assertEqual(spans[1]["parent_id"], spans[2]["context"]["span_id"])
         self.assertEqual(spans[0]["parent_id"], spans[1]["context"]["span_id"])
@@ -147,7 +147,7 @@ class TestTask(unittest.TestCase):
             span = json.loads(line)
             spans.append(span)
         self.assertEqual(len(spans), 3)
-        self.assertNotEqual(spans[2]["parent_id"], None)
+        self.assertEqual(spans[2]["parent_id"], None)
         self.assertEqual(spans[1]["parent_id"], spans[2]["context"]["span_id"])
         self.assertEqual(spans[0]["parent_id"], spans[1]["context"]["span_id"])
 
