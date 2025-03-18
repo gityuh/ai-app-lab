@@ -16,7 +16,16 @@ import contextvars
 import inspect
 import time
 from functools import wraps
-from typing import Any, AsyncGenerator, Callable, Dict, Iterable, Optional, TypeVar
+from typing import (
+    Any,
+    AsyncGenerator,
+    Callable,
+    Dict,
+    Iterable,
+    Optional,
+    Tuple,
+    TypeVar,
+)
 
 from opentelemetry import trace
 
@@ -148,101 +157,153 @@ def task(
         async def async_iter_task(*args: Any, **kwargs: Any) -> AsyncGenerator[T, None]:
             _init_trace_context()
 
-            parent_ctx = _current_span_context.get(None)
-            span = tracer.start_span(
-                name=func.__qualname__ + ".first_iter",
-                start_time=time.time_ns(),
-                context=parent_ctx,
+            root_parent_ctx, root_span = _get_span_with_context(
+                func.__qualname__ + ".root"
             )
-            _current_span_context.set(trace.set_span_in_context(span))
+            last_resp = None
             input = _update_kwargs(args, kwargs, func)
-            try:
-                async for i, resp in aenumerate(func(*args, **kwargs)):  # type: ignore
-                    if i == 0 or trace_all:
-                        set_trace_attributes(
-                            span,
-                            status_code=trace.StatusCode.OK,
-                            input=input if (watch_io and i == 0) else "",
-                            output=resp if watch_io else "",
-                            resource_type=get_resource_type(),
-                            resource_id=get_resource_id(),
-                            request_id=get_reqid(),
-                            client_request_id=get_client_reqid(),
-                            account_id=get_account_id(),
-                            merge_output=True,
-                            custom_attributes=custom_attributes,
+
+            async def iter_entry() -> AsyncGenerator[T, None]:
+                parent_ctx = _current_span_context.get()
+                span = tracer.start_span(
+                    name=func.__qualname__ + ".first_iter",
+                    start_time=time.time_ns(),
+                    context=parent_ctx,
+                )
+
+                try:
+                    async for i, resp in aenumerate(func(*args, **kwargs)):  # type: ignore
+                        if i == 0 or trace_all:
+                            set_trace_attributes(
+                                span,
+                                status_code=trace.StatusCode.OK,
+                                input=input if (watch_io and i == 0) else "",
+                                output=resp if watch_io else "",
+                                resource_type=get_resource_type(),
+                                resource_id=get_resource_id(),
+                                request_id=get_reqid(),
+                                client_request_id=get_client_reqid(),
+                                account_id=get_account_id(),
+                                merge_output=True,
+                                custom_attributes=custom_attributes,
+                            )
+                            if i == 0:
+                                span.end(end_time=time.time_ns())
+                            else:
+                                _return_span_with_context(parent_ctx, span)
+                        yield resp
+
+                        if trace_all:
+                            parent_ctx, span = _get_span_with_context(func.__qualname__)
+
+                except Exception as e:
+                    if not trace_all:
+                        span = tracer.start_span(
+                            name=func.__qualname__, start_time=time.time_ns()
                         )
-                        span.end(end_time=time.time_ns())
-                        _current_span_context.set(parent_ctx)
+                    handle_exception(span, e, input)
+                    raise e
+                finally:
+                    _return_span_with_context(parent_ctx, span)
+
+            try:
+                async for resp in iter_entry():
+                    last_resp = resp
                     yield resp
 
-                    if trace_all:
-                        parent_ctx = _current_span_context.get()
-                        span = tracer.start_span(
-                            name=func.__qualname__,
-                            start_time=time.time_ns(),
-                            context=parent_ctx,
-                        )
-                        _current_span_context.set(trace.set_span_in_context(span))
             except Exception as e:
-                if not trace_all:
-                    span = tracer.start_span(
-                        name=func.__qualname__, start_time=time.time_ns()
-                    )
-                handle_exception(span, e, input)
                 raise e
+
             finally:
-                span.end(end_time=time.time_ns())
-                _current_span_context.set(parent_ctx)
+                set_trace_attributes(
+                    root_span,
+                    status_code=trace.StatusCode.OK,
+                    input=input if watch_io else "",
+                    output=last_resp if watch_io else "",
+                    resource_type=get_resource_type(),
+                    resource_id=get_resource_id(),
+                    request_id=get_reqid(),
+                    client_request_id=get_client_reqid(),
+                    account_id=get_account_id(),
+                    merge_output=True,
+                    custom_attributes=custom_attributes,
+                )
+                _return_span_with_context(root_parent_ctx, root_span)
 
         @wraps(func)
         def iter_task(*args: Any, **kwargs: Any) -> Iterable[T]:
             _init_trace_context()
 
-            parent_ctx = _current_span_context.get(None)
-            span = tracer.start_span(
-                name=func.__qualname__, start_time=time.time_ns(), context=parent_ctx
+            root_parent_ctx, root_span = _get_span_with_context(
+                func.__qualname__ + ".root"
             )
-            _current_span_context.set(trace.set_span_in_context(span))
-
+            last_resp = None
             input = _update_kwargs(args, kwargs, func)
-            try:
-                for i, resp in enumerate(func(*args, **kwargs)):
-                    if i == 0 or trace_all:
-                        set_trace_attributes(
-                            span,
-                            status_code=trace.StatusCode.OK,
-                            input=input if (watch_io and i == 0) else "",
-                            output=resp if watch_io else "",
-                            resource_type=get_resource_type(),
-                            resource_id=get_resource_id(),
-                            request_id=get_reqid(),
-                            client_request_id=get_client_reqid(),
-                            account_id=get_account_id(),
-                            merge_output=True,
-                            custom_attributes=custom_attributes,
-                        )
-                        span.end(end_time=time.time_ns())
-                        _current_span_context.set(parent_ctx)
-                    yield resp
-                    if trace_all:
-                        parent_ctx = _current_span_context.get()
+
+            def iter_entry() -> Iterable[T]:
+                parent_ctx = _current_span_context.get()
+                span = tracer.start_span(
+                    name=func.__qualname__ + ".first_iter",
+                    start_time=time.time_ns(),
+                    context=parent_ctx,
+                )
+
+                try:
+                    for i, resp in enumerate(func(*args, **kwargs)):
+                        if i == 0 or trace_all:
+                            set_trace_attributes(
+                                span,
+                                status_code=trace.StatusCode.OK,
+                                input=input if (watch_io and i == 0) else "",
+                                output=resp if watch_io else "",
+                                resource_type=get_resource_type(),
+                                resource_id=get_resource_id(),
+                                request_id=get_reqid(),
+                                client_request_id=get_client_reqid(),
+                                account_id=get_account_id(),
+                                merge_output=True,
+                                custom_attributes=custom_attributes,
+                            )
+                            if i == 0:
+                                span.end(end_time=time.time_ns())
+                            else:
+                                _return_span_with_context(parent_ctx, span)
+
+                        yield resp
+                        if trace_all:
+                            parent_ctx, span = _get_span_with_context(func.__qualname__)
+
+                except Exception as e:
+                    if not trace_all:
                         span = tracer.start_span(
-                            name=func.__qualname__,
-                            start_time=time.time_ns(),
-                            context=parent_ctx,
+                            name=func.__qualname__, start_time=time.time_ns()
                         )
-                        _current_span_context.set(trace.set_span_in_context(span))
-            except Exception as e:
-                if not trace_all:
-                    span = tracer.start_span(
-                        name=func.__qualname__, start_time=time.time_ns()
+                    handle_exception(span, e, input)
+                    raise e
+                finally:
+                    set_trace_attributes(
+                        span,
+                        status_code=trace.StatusCode.OK,
+                        input=input if watch_io else "",
+                        output=last_resp if watch_io else "",
+                        resource_type=get_resource_type(),
+                        resource_id=get_resource_id(),
+                        request_id=get_reqid(),
+                        client_request_id=get_client_reqid(),
+                        account_id=get_account_id(),
+                        merge_output=True,
+                        custom_attributes=custom_attributes,
                     )
-                handle_exception(span, e, input)
+                    _return_span_with_context(parent_ctx, span)
+
+            try:
+                for resp in iter_entry():
+                    last_resp = resp
+                    yield resp
+            except Exception as e:
                 raise e
             finally:
-                span.end(end_time=time.time_ns())
-                _current_span_context.set(parent_ctx)
+                _return_span_with_context(root_parent_ctx, root_span)
 
         if inspect.isasyncgenfunction(func):
             return async_iter_task
@@ -274,6 +335,22 @@ def handle_exception(span: trace.Span, exception: Exception, args: Any) -> None:
 def _init_trace_context() -> None:
     context_req = _current_span_context_req.get("")
     if context_req != get_reqid():
-        # first time in this req, init context span
         _current_span_context.set(None)
         _current_span_context_req.set(get_reqid())
+
+
+def _get_span_with_context(name: str) -> Tuple[Any, Any]:
+    parent_ctx = _current_span_context.get()
+    span = tracer.start_span(
+        name=name,
+        start_time=time.time_ns(),
+        context=parent_ctx,
+    )
+    _current_span_context.set(trace.set_span_in_context(span))
+
+    return parent_ctx, span
+
+
+def _return_span_with_context(parent_ctx: Any, span: Any) -> None:
+    _current_span_context.set(parent_ctx)
+    span.end(end_time=time.time_ns())
