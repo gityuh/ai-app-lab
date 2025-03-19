@@ -1,3 +1,5 @@
+# 实时对话式 AI
+
 ## 应用介绍
 
 超低延迟的 AI 实时对话应用。整合大模型, 语音识别, 语音合成等人工智能技术，实现音视频数据的高效采集、处理和传输，快速实现用户与大模型间流畅、自然、真人感的实时通话功能。
@@ -39,8 +41,6 @@ https://demo.volcvideo.com/aigc/login
 
 ### 相关模型
 
-> 介绍当前应用使用到的所有模型，以及每个模型所起的作用
-
 当前实时对话式AI产品方案支持的模型包括方舟平台上线的全量豆包大模型，以及方舟平台认证的第三方合作模型，如DeepSeek模型，模型详细信息见方舟平台官网。
 
 ### 流程架构
@@ -68,50 +68,53 @@ RTC 提供了便捷的测试验证平台，支持快速配置，无代码快速�
 2. 进入[新手引导](https://console.volcengine.com/rtc/guide?)，点击 [跑通 Demo](https://console.volcengine.com/rtc/guide?) 进入快速配置页。
 	
 
-![](./assets/1.png)
+<img src="./assets/1.png" style="max-width: 50%; height: auto;">
 
 3. 开通语音识别、语音合成和大模型服务。
 	
 
 参看【步骤说明】开通语音识别-流式语音识别（ASR）、音频生成-语音合成（TTS）和大模型服务，并获得 ASR AppId、ASR Cluster、TTS AppId、TTS Cluster 和大模型 EndPointID。
-![](./assets/2.png)
+<img src="./assets/2.png" style="max-width: 70%; height: auto;">
 
-4. 根据指引配置 `VoiceChatRoleForRTC`服务权限，以便 RTC 与语音识别、语音合成和大模型进行交互。
+4. 点击【一键开通】开通账号服务权限，以便 RTC 与语音识别、语音合成和大模型进行交互。
 	
-
-![](./assets/3.png)
+<img src="./assets/3.png" style="max-width: 70%; height: auto;">
 
 5. 加入与智能体对话的 RTC 房间。
 	
 
 点击【加入 RTC 房间】，自定义房间号和用户名，并生成临时鉴权 Token 创建并加入房间。此时会使用你创建 RTC 服务时生成的默认应用，你也可以点击应用下拉框创建新的应用。
-![](./assets/4.png)
+<img src="./assets/4.png" style="max-width: 50%; height: auto;">
 
 6. 创建智能体并引入 RTC 房间。
 	1. 点击【调用智能体】。
 		
 	2. 进行 任务 ID 配置。
-		
-	  此时会根据你在步骤 5 配置的信息自动填充任务 ID 配置。
-	![](./assets/5.png)
-	5. 进行智能体和 LLM 参数配置。
-		
+
+	此时会根据你在步骤 5 配置的信息自动填充任务 ID 配置。
+
+	<img src="./assets/5.png" style="max-width: 50%; height: auto;">
+
+	3. 进行智能体和 LLM 参数配置。
+
 	  填入自定义的智能体名称、欢迎语和你在步骤 3 获得的火山方舟大模型 EndPointID。
-	![](./assets/6.png)
-	8. 进行 ASR 和 TTS 配置。
-		
+
+	<img src="./assets/6.png" style="max-width: 50%; height: auto;">
+
+	4. 进行 ASR 和 TTS 配置。
+
 	  填入你在步骤 3 获得的 ASR AppId、 ASR Cluster、 TTS AppId 和 TTS Cluster，ASR 模型选择流式语音识别（Small model）。
-	![](./assets/7.png)
+
+	<img src="./assets/7.png" style="max-width: 50%; height: auto;">
+
 	  点击【开始调用】完成配置，体验与 AI 智能体实时互动。
-	
+
 
 ## 技术实现
 
 [场景搭建](https://www.volcengine.com/docs/6348/1310560)
 
 ## 目录结构
-
-https://github.com/volcengine/rtc-aigc-demo （开源github代码链接）
 
 ```Bash
 .
