@@ -84,7 +84,7 @@ RTC 提供了便捷的测试验证平台，支持快速配置，无代码快速�
 	
 
 点击【加入 RTC 房间】，自定义房间号和用户名，并生成临时鉴权 Token 创建并加入房间。此时会使用你创建 RTC 服务时生成的默认应用，你也可以点击应用下拉框创建新的应用。
-<img src="./assets/4.png" style="max-width: 50%; height: auto;">
+<img src="https://portal.volccdn.com/obj/volcfe/cloud-universal-doc/upload_0b2b708f33e3e431c92fc0ca5e84f178.png" style="max-width: 70%; height: auto;">
 
 6. 创建智能体并引入 RTC 房间。
 	1. 点击【调用智能体】。
