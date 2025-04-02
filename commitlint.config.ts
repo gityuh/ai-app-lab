@@ -35,9 +35,9 @@ const Configuration: UserConfig = {
                     if (!c.scope) return [['release', 'license'].includes(c.type), 'scope must be provided']
 
                     const allowedScopes = ['arkitect', 'demohouse/*'];
-                
+
                     // 正则校验：arkitect 或 demohouse/ 开头
-                    const isValid = /^(arkitect|demohouse\/.+)$/.test(c.scope);
+                    const isValid = /^(arkitect|demohouse\/.+|mcp\/.+)$/.test(c.scope);
                     return [isValid, `Scope must be one of ${allowedScopes.join(', ')}`];
                 },
             }
