@@ -6,11 +6,11 @@ from vefaas_server import does_function_exist
 class TestVeFaaSServerIntegration(unittest.TestCase):
     def setUp(self):
         # Check if credentials are available
-        self.ak = os.environ.get("ACCESS_KEY_ID")
-        self.sk = os.environ.get("ACCESS_KEY_SECRET")
+        self.ak = os.environ.get("VOLC_ACCESSKEY")
+        self.sk = os.environ.get("VOLC_SECRETKEY")
         if not self.ak or not self.sk:
             self.assertFalse(
-                "ACCESS_KEY_ID or ACCESS_KEY_SECRET environment variables not set"
+                "VOLC_ACCESSKEY or VOLC_SECRETKEY environment variables not set"
             )
 
     def test_does_function_exist_with_real_credentials(self):

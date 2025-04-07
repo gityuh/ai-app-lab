@@ -155,13 +155,13 @@ def generate_random_name(prefix="mcp", length=8):
 
 def init_client(region: str = None):
     """Set up VeFaaS configuration with credentials from environment variables"""
-    if "ACCESS_KEY_ID" not in os.environ:
-        raise ValueError("ACCESS_KEY_ID environment variable is not set")
-    if "ACCESS_KEY_SECRET" not in os.environ:
-        raise ValueError("ACCESS_KEY_SECRET environment variable is not set")
+    if "VOLC_ACCESSKEY" not in os.environ:
+        raise ValueError("VOLC_ACCESSKEY environment variable is not set")
+    if "VOLC_SECRETKEY" not in os.environ:
+        raise ValueError("VOLC_SECRETKEY environment variable is not set")
 
-    ak = os.environ["ACCESS_KEY_ID"]
-    sk = os.environ["ACCESS_KEY_SECRET"]
+    ak = os.environ["VOLC_ACCESSKEY"]
+    sk = os.environ["VOLC_SECRETKEY"]
 
     configuration = volcenginesdkcore.Configuration()
     configuration.ak = ak
