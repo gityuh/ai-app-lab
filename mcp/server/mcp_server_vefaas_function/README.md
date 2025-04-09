@@ -16,13 +16,13 @@ This project provides a MCP server for managing veFaaS (Volc Engine Function as 
 ## Prerequisites
 
 - Python 3.12+
-- Access to Volc Engine (ACCESS_KEY_ID and ACCESS_KEY_SECRET)
+- Access to Volc Engine (VOLC_ACCESSKEY and VOLC_SECRETKEY)
 
 ## Getting started
 
 - Configure
 
-Please set the value for envirable variable ACCESS_KEY_ID and ACCESS_KEY_SECRET in [](./mcp.json)
+Please set the value for envirable variable VOLC_ACCESSKEY and VOLC_SECRETKEY in [](./mcp.json)
 
 ```json
 {
@@ -35,8 +35,8 @@ Please set the value for envirable variable ACCESS_KEY_ID and ACCESS_KEY_SECRET 
         "mcp-server-vefaas-function"
       ],
       "env": {
-        "ACCESS_KEY_ID": "xxx",
-        "ACCESS_KEY_SECRET": "xxx"
+        "VOLC_ACCESSKEY": "xxx",
+        "VOLC_SECRETKEY": "xxx"
       }
     }
   }
