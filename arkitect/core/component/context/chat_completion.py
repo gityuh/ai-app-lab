@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, AsyncIterable, Dict, List, Literal, Mapping, Optional, Union
+from typing import Any, AsyncIterable, Dict, List, Literal, Optional, Union
 
 from volcenginesdkarkruntime import AsyncArk
 from volcenginesdkarkruntime.resources.chat import AsyncChat
@@ -26,24 +26,22 @@ from volcenginesdkarkruntime.types.chat.chat_completion_message import (
     ChatCompletionMessage,
 )
 
-from .hooks import ChatHook, default_chat_hook
-from .model import State, ToolType
+from arkitect.core.component.tool.tool_pool import ToolPool
+
+from .model import State
 
 
 class _AsyncCompletions(AsyncCompletions):
-    def __init__(self, client: AsyncArk, state: State, hooks: List[ChatHook]):
+    def __init__(self, client: AsyncArk, state: State):
         self._state = state
-        if len(hooks) > 0:
-            self.hooks = hooks
-        else:
-            self.hooks = [default_chat_hook]
         super().__init__(client)
 
     async def create(
         self,
+        model: str,
         messages: List[ChatCompletionMessageParam],
         stream: Optional[Literal[True, False]] = True,
-        tools: Optional[Mapping[str, ToolType]] = None,
+        tool_pool: ToolPool | None = None,
         **kwargs: Dict[str, Any],
     ) -> Union[ChatCompletion, AsyncIterable[ChatCompletionChunk]]:
         parameters = (
@@ -51,14 +49,11 @@ class _AsyncCompletions(AsyncCompletions):
             if self._state.parameters is not None
             else {}
         )
-        if tools is not None:
-            parameters["tools"] = [
-                tool.tool_schema().model_dump() for tool in tools.values() or []
-            ]
-        for hook in self.hooks:
-            messages = await hook(self._state, messages)
+        if tool_pool:
+            tools = await tool_pool.list_tools()
+            parameters["tools"] = [t.model_dump() for t in tools]
         resp = await super().create(
-            model=self._state.model,
+            model=model,
             messages=messages,
             stream=stream,
             **parameters,
@@ -77,6 +72,7 @@ class _AsyncCompletions(AsyncCompletions):
                     content="",
                     tool_calls=[],
                 )
+                self._state.messages.append(chat_completion_messages.__dict__)
                 async for chunk in resp:
                     if len(chunk.choices) > 0:
                         if chunk.choices[0].delta.content:
@@ -96,17 +92,15 @@ class _AsyncCompletions(AsyncCompletions):
                 chat_completion_messages.tool_calls = [
                     v.model_dump() for v in final_tool_calls.values()
                 ]
-                self._state.messages.append(chat_completion_messages.__dict__)
 
             return iterator()
 
 
 class _AsyncChat(AsyncChat):
-    def __init__(self, client: AsyncArk, state: State, hooks: List[ChatHook] = []):
+    def __init__(self, client: AsyncArk, state: State):
         self._state = state
-        self.hooks = hooks
         super().__init__(client)
 
     @property
     def completions(self) -> _AsyncCompletions:
-        return _AsyncCompletions(self._client, self._state, self.hooks)
+        return _AsyncCompletions(self._client, self._state)

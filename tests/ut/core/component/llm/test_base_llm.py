@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import os
-
 from arkitect.core.component.llm import BaseChatLanguageModel
-from arkitect.core.component.llm.model import ArkMessage
+from arkitect.types.llm.model import ArkChatResponse, ArkMessage
+from util import MockAsyncArk, get_tool_call_reply
 
 os.environ["ARK_API_KEY"] = "-"
 
@@ -28,7 +28,7 @@ def test_generate_prompts_with_additional_prompts() -> None:
     ]
     additional_prompts = ["Welcome to the chat!", "How can I help you today?"]
 
-    mock_chat_model = BaseChatLanguageModel(endpoint_id="123", messages=messages)
+    mock_chat_model = BaseChatLanguageModel(model="123", messages=messages)
     # Act
     result = mock_chat_model.generate_prompts(
         messages, additional_system_prompts=additional_prompts
@@ -46,7 +46,7 @@ def test_generate_prompts_without_template():
         ArkMessage(role="user", content="Hello"),
         ArkMessage(role="assistant", content="Hi there!"),
     ]
-    mock_chat_model = BaseChatLanguageModel(endpoint_id="123", messages=messages)
+    mock_chat_model = BaseChatLanguageModel(model="123", messages=messages)
     mock_chat_model.template = None
 
     # Act
@@ -63,7 +63,7 @@ def test_generate_prompts_with_formatting() -> None:
         ArkMessage(role="user", content="Hello"),
         ArkMessage(role="assistant", content="Hi there!"),
     ]
-    mock_chat_model = BaseChatLanguageModel(endpoint_id="123", messages=messages)
+    mock_chat_model = BaseChatLanguageModel(model="123", messages=messages)
     additional_prompts = ["Welcome to the chat!", "How can I help you today?"]
 
     # Act
@@ -76,3 +76,41 @@ def test_generate_prompts_with_formatting() -> None:
     assert len(result) == len(messages) + len(additional_prompts)
     assert all(msg.role == "system" for msg in result[: len(additional_prompts) + 1])
     assert all(msg.role != "system" for msg in result[len(additional_prompts) + 1 :])
+
+
+async def test_base_chat_llm_with_unseen_tools() -> None:
+    llm = BaseChatLanguageModel(
+        client=MockAsyncArk(message=get_tool_call_reply()),
+        messages=[ArkMessage(role="user", content="hi")],
+        model="abc",
+    )
+    resp = await llm.arun()
+    assert isinstance(resp, ArkChatResponse)
+
+
+async def test_base_chat_llm_with_registered_tools() -> None:
+
+    async def adder(a: int, b: int) -> int:
+        """Add two integer numbers
+        Args:
+            a (int): first number
+            b (int): second number
+        Returns:
+            int: sum result
+        """
+        return a + b
+
+    llm = BaseChatLanguageModel(
+        client=MockAsyncArk(message=get_tool_call_reply()),
+        messages=[ArkMessage(role="user", content="hi")],
+        model="abc",
+    )
+    resp = await llm.arun(functions=[adder])
+    assert isinstance(resp, ArkChatResponse)
+    assert resp.choices[0].message.content == "tool call handled"
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    asyncio.run(test_base_chat_llm_with_registered_tools())
