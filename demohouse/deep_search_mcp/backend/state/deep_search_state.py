@@ -19,7 +19,7 @@ from models.planning import Planning
 from models.usage import TotalUsage
 
 
-class DeepResearchState(BaseModel):
+class DeepSearchState(BaseModel):
     # session_id
     session_id: str = ''
     # root task
@@ -39,12 +39,12 @@ class DeepResearchState(BaseModel):
         arbitrary_types_allowed = True
 
 
-class DeepResearchStateManager(abc.ABC):
+class DeepSearchStateManager(abc.ABC):
 
     @abc.abstractmethod
-    async def dump(self, state: DeepResearchState) -> None:
+    async def dump(self, state: DeepSearchState) -> None:
         pass
 
     @abc.abstractmethod
-    async def load(self) -> Optional[DeepResearchState]:
+    async def load(self) -> Optional[DeepSearchState]:
         pass
