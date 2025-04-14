@@ -30,12 +30,13 @@ from config.config import (
     SESSION_SAVE_PATH,
     WORKER_LLM_MODEL,
     SUPERVISOR_LLM_MODEL,
-    SUMMARY_LLM_MODEL, COLLECTION_DESCRIPTION,
+    SUMMARY_LLM_MODEL,
+    COLLECTION_DESCRIPTION,
 )
-from deep_research.deep_research import DeepResearch
+from deep_search.deep_search import DeepSearch
 from models.events import BaseEvent, ErrorEvent
 from models.request import CreateSessionRequest, RunSessionRequest, DeepResearchRequest
-from state.deep_research_state import DeepResearchStateManager, DeepResearchState
+from state.deep_search_state import DeepSearchStateManager, DeepSearchState
 from state.file_state_manager import FileStateManager
 from state.global_state import GlobalState
 from tools.hooks import (
@@ -47,7 +48,7 @@ from tools.hooks import (
 
 
 async def _run_deep_research(
-    state_manager: DeepResearchStateManager, max_plannings: int
+    state_manager: DeepSearchStateManager, max_plannings: int
 ) -> AsyncIterable[BaseEvent]:
     # init mcp client
     mcp_clients, clean_up = build_mcp_clients_from_config(
@@ -65,7 +66,7 @@ async def _run_deep_research(
         return
 
     try:
-        dr = DeepResearch(
+        dr = DeepSearch(
             supervisor_llm_model=SUPERVISOR_LLM_MODEL,
             summary_llm_model=SUMMARY_LLM_MODEL,
             workers=get_workers(GlobalState(custom_state=dr_state), mcp_clients),
@@ -89,7 +90,7 @@ async def _run_deep_research(
 async def create_session(request: DeepResearchRequest) -> str:
     session_id = uuid.uuid4().hex
 
-    dr_state = DeepResearchState(
+    dr_state = DeepSearchState(
         root_task=request.root_task,
         session_id=session_id,
         enabled_mcp_servers=request.enabled_mcp_servers,

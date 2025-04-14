@@ -21,7 +21,7 @@ from arkitect.telemetry.trace import task
 from arkitect.types.llm.model import ArkChatParameters
 from models.events import BaseEvent, OutputTextEvent, ReasoningEvent, ErrorEvent
 from prompt.summary import DEFAULT_SUMMARY_PROMPT
-from state.deep_research_state import DeepResearchState
+from state.deep_search_state import DeepSearchState
 from state.global_state import GlobalState
 from utils.converter import convert_references_to_markdown
 
@@ -72,7 +72,7 @@ class Summary(Agent):
             yield ErrorEvent(api_exception=InternalServiceError(message=str(e)))
             return
 
-    async def generate_prompt(self, dr_state: DeepResearchState) -> str:
+    async def generate_prompt(self, dr_state: DeepSearchState) -> str:
         return Template(self.prompt).render(
             instruction=self.instruction,
             complex_task=dr_state.planning.root_task,

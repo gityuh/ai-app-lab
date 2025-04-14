@@ -18,7 +18,7 @@ from agent.summary import Summary
 from agent.worker import Worker
 from agent.supervisor import Supervisor
 from models.events import *
-from state.deep_research_state import DeepResearchState, DeepResearchStateManager
+from state.deep_search_state import DeepSearchState, DeepSearchStateManager
 from state.global_state import GlobalState
 from tools.mock import add, compare
 
@@ -29,7 +29,7 @@ class DeepSearch(BaseModel):
     workers: Dict[str, Worker] = {}
     dynamic_planning: bool = False
     max_planning_items: int = 10
-    state_manager: Optional[DeepResearchStateManager] = None
+    state_manager: Optional[DeepSearchStateManager] = None
 
     class Config:
         """Configuration for this pydantic object."""
@@ -38,7 +38,7 @@ class DeepSearch(BaseModel):
 
     async def astream(
             self,
-            dr_state: DeepResearchState,
+            dr_state: DeepSearchState,
     ) -> AsyncIterable[BaseEvent]:
         global_state = GlobalState(
             custom_state=dr_state,
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     async def main():
 
-        dr_state = DeepResearchState(
+        dr_state = DeepSearchState(
             root_task='比较 (1 + 23) 和 (7 + 19) 哪个更大'
         )
 

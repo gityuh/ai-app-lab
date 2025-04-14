@@ -16,10 +16,10 @@ from pathlib import Path
 from typing import Optional
 from pydantic import ValidationError, BaseModel
 
-from state.deep_research_state import DeepResearchStateManager, DeepResearchState
+from state.deep_search_state import DeepSearchStateManager, DeepSearchState
 
 
-class FileStateManager(BaseModel, DeepResearchStateManager):
+class FileStateManager(BaseModel, DeepSearchStateManager):
     path: str = ''
 
     async def _ensure_directory(self) -> None:
@@ -28,7 +28,7 @@ class FileStateManager(BaseModel, DeepResearchStateManager):
         if not dir_path.exists():
             os.makedirs(dir_path, exist_ok=True)
 
-    async def dump(self, state: DeepResearchState) -> None:
+    async def dump(self, state: DeepSearchState) -> None:
         """将状态异步保存到 JSON 文件"""
         try:
             await self._ensure_directory()
@@ -41,7 +41,7 @@ class FileStateManager(BaseModel, DeepResearchStateManager):
         except Exception as e:
             raise RuntimeError(f"Unexpected error during state save: {str(e)}") from e
 
-    async def load(self) -> Optional[DeepResearchState]:
+    async def load(self) -> Optional[DeepSearchState]:
         """从 JSON 文件异步加载状态"""
         try:
             if not os.path.exists(self.path):
@@ -50,7 +50,7 @@ class FileStateManager(BaseModel, DeepResearchStateManager):
             async with aiofiles.open(self.path, 'r', encoding='utf-8') as f:
                 content = await f.read()
                 state_dict = json.loads(content)
-                return DeepResearchState.model_validate(state_dict)
+                return DeepSearchState.model_validate(state_dict)
         except FileNotFoundError:
             return None
         except json.JSONDecodeError as e:

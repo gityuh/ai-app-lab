@@ -41,7 +41,7 @@ from models.events import (
 )
 from models.planning import PlanningItem, Planning
 from prompt.planning import DEFAULT_PLANNING_MAKE_PROMPT, DEFAULT_PLANNING_UPDATE_PROMPT
-from state.deep_research_state import DeepResearchState, DeepResearchStateManager
+from state.deep_search_state import DeepSearchState, DeepSearchStateManager
 from state.global_state import GlobalState
 from utils.common import get_env_info
 from utils.planning_holder import PlanningHolder
@@ -94,7 +94,7 @@ class Supervisor(Agent):
     dynamic_planning: bool = False  # enable the dynamic planning ability
     max_plannings: int = (10,)
     _control_hook: SupervisorControlHook = SupervisorControlHook()
-    state_manager: Optional[DeepResearchStateManager] = None
+    state_manager: Optional[DeepSearchStateManager] = None
 
     # @task()
     async def astream(
@@ -294,7 +294,7 @@ class Supervisor(Agent):
     def _to_completion_usage(
         self, global_state: GlobalState
     ) -> Optional[CompletionUsage]:
-        if isinstance(global_state.custom_state, DeepResearchState):
+        if isinstance(global_state.custom_state, DeepSearchState):
             if global_state.custom_state.total_usage:
                 return CompletionUsage(
                     prompt_tokens=global_state.custom_state.total_usage.prompt_tokens,
@@ -315,7 +315,7 @@ if __name__ == "__main__":
     async def main():
 
         global_state = GlobalState(
-            custom_state=DeepResearchState(
+            custom_state=DeepSearchState(
                 root_task="判断(1+20) 和 (22 + 23) 哪个结果大"
             )
         )
