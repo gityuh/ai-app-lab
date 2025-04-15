@@ -14,6 +14,7 @@
 
 from typing import Any, Literal, Sequence
 
+from arkitect.telemetry.trace import setup_tracing, task
 from mcp.server.fastmcp import FastMCP
 from mcp.types import (
     EmbeddedResource,
@@ -23,8 +24,6 @@ from mcp.types import (
 from mcp.types import (
     Tool as MCPTool,
 )
-
-from arkitect.telemetry.trace import setup_tracing, task
 
 
 class ArkFastMCP(FastMCP):

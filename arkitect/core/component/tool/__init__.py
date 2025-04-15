@@ -13,9 +13,10 @@
 # limitations under the License.
 
 from .builder import build_mcp_clients_from_config
+from .builtin_tools import calculator, link_reader
 from .mcp_client import MCPClient
-from .tool_pool import ToolPool, build_tool_pool
 from .mcp_server import ArkFastMCP
+from .tool_pool import ToolPool, build_tool_pool
 
 __all__ = [
     "MCPClient",
@@ -23,4 +24,6 @@ __all__ = [
     "build_tool_pool",
     "build_mcp_clients_from_config",
     "ArkFastMCP",
+    "link_reader",
+    "calculator",
 ]
