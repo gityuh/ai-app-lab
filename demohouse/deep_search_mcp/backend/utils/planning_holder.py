@@ -32,7 +32,7 @@ class PlanningHolder(BaseModel):
         """
         next_task_id = 1
         for task_description, worker_name in zip(task_descriptions, worker_names):
-            if len(self.planning.items) > self.max_plannings:
+            if len(self.planning.items) >= self.max_plannings:
                 return "保存成功，已经达到任务数量上限"
             self.planning.items.append(PlanningItem(
                 id=str(next_task_id),
