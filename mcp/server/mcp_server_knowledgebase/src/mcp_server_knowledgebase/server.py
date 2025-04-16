@@ -26,7 +26,7 @@ mcp = FastMCP("Viking Knowledge Base Server", port=int(os.getenv("PORT", "8000")
 def search_knowledge(
     query: str,
     limit: int = 3,
-    collection_name: Optional[str] = None,
+    collection_name: str = "",
 ) -> Dict:
     """Search knowledge from the Viking Knowledge Base Service.
     This tool searches for knowledge in the configured collection based on the provided query.
