@@ -33,8 +33,8 @@ mcp = FastMCP("TLS Log Search Server", port=int(os.getenv("PORT", "8000")))
 @mcp.tool()
 async def text_to_sql(
         question: str,
-        topic_id: Optional[str] = None,
-        session_id: Optional[Union[str, int]] = None,
+        topic_id: str = "",
+        session_id: str = "",
 ) -> dict:
     """Convert natural language to Log query's specific SQL statement.
 
@@ -50,9 +50,10 @@ async def text_to_sql(
         topic_id: Optional topic ID to search logs from. If not provided, uses the globally configured topic.
         session_id: Optional session ID to use for the conversation. If not provided, a new session will be created.
 
+
     """
     # 转下session类型,解决json.loads类型问题
-    if session_id is not None:
+    if session_id:
         session_id = str(session_id)
 
     topic_id = topic_id or global_topic_id
@@ -105,10 +106,10 @@ async def text_to_sql(
 @mcp.tool()
 def search_logs(
         query: str,
-        topic_id: Optional[str] = None,
+        topic_id: str = "",
         limit: int = 100,
-        start_time: Optional[int] = None,
-        end_time: Optional[int] = None,
+        start_time: int = -1,
+        end_time: int = -1,
 ) -> List[Dict]:
     """Search logs using the provided query from the TLS service.
 
@@ -144,11 +145,11 @@ def search_logs(
 
     try:
         # Use current time if end_time is not provided
-        if end_time is None:
+        if end_time < 0:
             end_time = int(time.time() * 1000)
 
         # Use 15 minutes ago if start_time is not provided
-        if start_time is None:
+        if start_time < 0:
             start_time = end_time - (15 * 60 * 1000)  # 15 minutes in milliseconds
         topic_id = topic_id or global_topic_id
         if not topic_id:
@@ -172,7 +173,7 @@ def search_logs(
 
 @mcp.tool()
 def get_recent_logs(
-        topic_id: Optional[str] = None, limit: int = 100, time_range_minutes: int = 15
+        topic_id: str = "", limit: int = 100, time_range_minutes: int = 15
 ) -> List[Dict]:
     """Retrieve the most recent logs from the TLS service without filtering.
 
