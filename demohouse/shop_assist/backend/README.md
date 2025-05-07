@@ -30,9 +30,7 @@
 
 ## 环境准备
 
-- Python 版本要求大于等于 3.9，小于 3.12
-- Poetry 1.6.1 版本，可参考以下命令安装
-pip install poetry==1.6.1
+- Python 版本要求大于等于 3.10，小于 3.12
 - <a target="_blank" href="https://console.volcengine.com/iam/keymanage/">获取火山引擎 AK SK</a> | <a target="_blank" href="https://www.volcengine.com/docs/6291/65568">参考文档</a>
   注意：如果使用的是 IAM 子用户的 AK SK，请联系管理员授予该用户 ArkFullAccess + TOSFullAccess 预设策略，或者 AdministratorAccess 预设策略。
 - 在<a target="_blank" href="https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement?LLM=%7B%7D&OpenTokenDrawer=false">开通管理页</a>开通 doubao-1-5-pro-32k 模型。
@@ -94,15 +92,14 @@ export ARK_API_KEY="your_api_key"
 ```shell
 python -m venv .venv
 source .venv/bin/activate
-pip install poetry==1.6.1
-
-poetry install
+pip install uv
+uv sync
 ```
 
 6. 启动服务
 
 ```shell
-poetry run python main.py
+uv run main.py
 ```
 
 7. 后端服务启动成功后，可在本地通过 curl 方式对服务进行调用，体验以下5个场景的能力。

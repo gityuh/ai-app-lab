@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # Licensed under the 【火山方舟】原型应用软件自用许可协议
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at 
+# You may obtain a copy of the License at
 #     https://www.volcengine.com/docs/82379/1433703
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,13 +15,13 @@ from config import endpoint_id
 from utils import get_auth_header
 
 from arkitect.core.component.llm import BaseChatLanguageModel
-from arkitect.core.component.llm.model import (
+from arkitect.telemetry.trace import task
+from arkitect.types.llm.model import (
     ArkChatParameters,
     ArkChatRequest,
     ArkMessage,
     Response,
 )
-from arkitect.telemetry.trace import task
 
 
 @task()
@@ -77,7 +77,7 @@ async def quality_inspection_chat(request: ArkChatRequest) -> AsyncIterable[Resp
     parameters = ArkChatParameters(**request.__dict__)
 
     llm = BaseChatLanguageModel(
-        endpoint_id=endpoint_id,
+        model=endpoint_id,
         messages=messages,
         parameters=parameters,
     )
