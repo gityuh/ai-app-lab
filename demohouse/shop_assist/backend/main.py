@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # Licensed under the 【火山方舟】原型应用软件自用许可协议
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at 
+# You may obtain a copy of the License at
 #     https://www.volcengine.com/docs/82379/1433703
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,14 +27,7 @@ from utils import get_auth_header, get_handler
 
 from arkitect.core.component.bot.server import BotServer
 from arkitect.core.component.llm import BaseChatLanguageModel
-from arkitect.core.component.llm.model import (
-    ArkChatCompletionChunk,
-    ArkChatParameters,
-    ArkChatRequest,
-    ArkChatResponse,
-    ArkMessage,
-    BotUsage,
-)
+from arkitect.core.component.tool.tool_pool import build_tool_pool
 from arkitect.core.errors import InternalServiceError
 from arkitect.launcher.runner import (
     get_default_client_configs,
@@ -43,6 +36,14 @@ from arkitect.launcher.runner import (
 )
 from arkitect.telemetry.trace import task
 from arkitect.telemetry.trace.setup import setup_tracing
+from arkitect.types.llm.model import (
+    ArkChatCompletionChunk,
+    ArkChatParameters,
+    ArkChatRequest,
+    ArkChatResponse,
+    ArkMessage,
+    BotUsage,
+)
 from arkitect.utils.context import (
     set_resource_id,
     set_resource_type,
@@ -77,10 +78,12 @@ async def custom_support_chat(
         },
     )
     llm = BaseChatLanguageModel(
-        endpoint_id=endpoint_id,
+        model=endpoint_id,
         messages=messages,
         parameters=parameters,
     )
+
+    print(await build_tool_pool(tools).list_tools(False))
     if request.stream:
         async for resp in llm.astream(
             functions=tools,

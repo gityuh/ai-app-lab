@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # Licensed under the 【火山方舟】原型应用软件自用许可协议
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at 
+# You may obtain a copy of the License at
 #     https://www.volcengine.com/docs/82379/1433703
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,10 +18,10 @@ from fastapi.responses import Response, StreamingResponse
 from volcenginesdkarkruntime._exceptions import ArkAPIError
 
 from arkitect.core.client.http import load_request
-from arkitect.core.component.llm.model import ArkMessage
 from arkitect.core.errors import APIException, ArkError, InternalServiceError
 from arkitect.core.runtime import RequestType, ResponseType
 from arkitect.launcher.runner import get_request_cls, get_runner
+from arkitect.types.llm.model import ArkMessage
 from arkitect.utils.context import get_headers
 
 

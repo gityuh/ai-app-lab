@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # Licensed under the 【火山方舟】原型应用软件自用许可协议
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at 
+# You may obtain a copy of the License at
 #     https://www.volcengine.com/docs/82379/1433703
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -9,14 +9,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict
+from typing import Callable, List, Tuple
 
-from arkitect.core.component.tool.pool import ToolManifest, tool_key
-from arkitect.core.component.tool.schema.linkreader import LinkReader
-
-from .order_check import OrderCheck
-from .order_refund import OrderRefund
-from .pack_track import PackTrack
+from .order_check import get_order_check_fn
+from .order_refund import get_order_refund_fn
+from .pack_track import get_pack_track_fn
 
 SYSTEM_PROMPT = """
 # 角色描述
@@ -91,7 +88,7 @@ FUNCTION_MAP = {
 
 def register_support_functions(
     functions: list, products: list, account_id: str
-) -> (Dict[str, ToolManifest], str):
+) -> Tuple[List[Callable], str]:
     prompts = f"""{SYSTEM_PROMPT}
 # 货架范围
 {products}
@@ -99,22 +96,15 @@ def register_support_functions(
 {[FUNCTION_MAP[i] for i in functions if i in FUNCTION_MAP]}
 
 """
-    tools = {}
+    tools = []
 
     for function in functions:
-        # if function == "product_description":
-        #     tool = LinkReader()
-        #     tools[tool_key(tool.action_name, tool.tool_name)] = tool
         if function == "package_track":
-            tool = PackTrack(account_id)
-            tools[tool_key(tool.action_name, tool.tool_name)] = tool
-            tool = OrderCheck(account_id)
-            tools[tool_key(tool.action_name, tool.tool_name)] = tool
+            tools.append(get_pack_track_fn(account_id))
+            tools.append(get_order_check_fn(account_id))
         if function == "order_check":
-            tool = OrderCheck(account_id)
-            tools[tool_key(tool.action_name, tool.tool_name)] = tool
+            tools.append(get_order_check_fn(account_id))
         if function == "order_refund":
-            tool = OrderRefund(account_id)
-            tools[tool_key(tool.action_name, tool.tool_name)] = tool
+            tools.append(get_order_refund_fn(account_id))
 
     return tools, prompts

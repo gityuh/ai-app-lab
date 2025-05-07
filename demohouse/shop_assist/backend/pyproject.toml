@@ -1,24 +1,12 @@
-[tool.poetry]
-name = "customer-support"
+[project]
+name = "backend"
 version = "0.1.0"
-description = "fake demo for shop_assist"
-authors = ["xiangyuxuan.prs <xiangyuxuan.prs@bytedance.com>"]
+description = "Add your description here"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = ">=3.9,<3.12.0"
-arkitect = { git = "https://github.com/Ssskrilex/ai-app-lab.git", branch = "xyx_feat_support_bot_usage" }
-pandas = "^2.2.3"
-volcengine = "^1.0.171"
-openpyxl = "^3.1.5"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.4"
-pytest-snapshot = "^0.9.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-addopts = "--verbose"
+requires-python = ">=3.10"
+dependencies = [
+    "arkitect==0.2.1",
+    "openpyxl>=3.1.5",
+    "pandas>=2.2.3",
+    "volcengine>=1.0.183",
+]
