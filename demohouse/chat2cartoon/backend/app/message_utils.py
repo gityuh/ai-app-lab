@@ -10,9 +10,9 @@
 # limitations under the License. 
 
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Union
 
-from arkitect.core.component.llm.model import ArkMessage
+from arkitect.types.llm.model import ArkMessage
 from arkitect.core.errors import InvalidParameter
 from arkitect.telemetry.logger import ERROR
 

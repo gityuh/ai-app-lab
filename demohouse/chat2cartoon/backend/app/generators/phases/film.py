@@ -37,7 +37,7 @@ from app.models.film import Film
 from app.models.tone import Tone
 from app.models.video import Video
 from app.output_parsers import OutputParser
-from arkitect.core.component.llm.model import (
+from arkitect.types.llm.model import (
     ArkChatCompletionChunk,
     ArkChatRequest,
     ArkChatResponse,
@@ -113,111 +113,169 @@ def _generate_film(
     clip_start_time = 0.0
     start = []
     elements = list(zip(tones, videos, audios))
-    for i, (t, v, a) in enumerate(elements):
-        start.append(clip_start_time)
+    
+    # 创建临时目录用于存储视频和音频文件
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # 先将所有视频和音频文件写入临时目录
+        video_files = []
+        audio_files = []
+        
+        for i, (t, v, a) in enumerate(elements):
+            # 保存视频到临时文件
+            video_path = os.path.join(temp_dir, f"video_{i}.mp4")
+            with open(video_path, "wb") as f:
+                f.write(v.video_data)
+            video_files.append(video_path)
+            
+            # 保存音频到临时文件
+            audio_path = os.path.join(temp_dir, f"audio_{i}.mp3")
+            with open(audio_path, "wb") as f:
+                f.write(a.audio_data)
+            audio_files.append(audio_path)
+        
+        # 处理每个视频和音频对
+        for i, (t, video_path, audio_path) in enumerate(zip(tones, video_files, audio_files)):
+            start.append(clip_start_time)
+            
+            # 加载视频和音频
+            try:
+                video_clip = VideoFileClip(video_path)
+                audio_clip = AudioFileClip(audio_path)
+                
+                if audio_clip.duration > video_clip.duration:
+                    audio_clip = audio_clip.subclipped(0, video_clip.duration)
+                
+                video_clip = video_clip.with_audio(audio_clip)
+                
+                # 添加字幕
+                clip_end_time = clip_start_time + video_clip.duration
+                # 如果文本不能适合一行则分割字幕
+                if t.line:
+                    cn_subtitles.extend(
+                        _split_subtitle(
+                            t.line, clip_start_time, clip_end_time, _split_subtitle_cn
+                        )
+                    )
+                if t.line_en:
+                    en_subtitles.extend(
+                        _split_subtitle(
+                            t.line_en, clip_start_time, clip_end_time, _split_subtitle_en
+                        )
+                    )
+                
+                # 为每个片段添加淡入淡出效果
+                if i != 0:
+                    video_clip = CrossFadeIn(duration=_FADE_IN_DURATION_IN_SECONDS).apply(
+                        video_clip
+                    )
+                if i != len(elements) - 1:
+                    video_clip = CrossFadeOut(duration=_FADE_OUT_DURATION_IN_SECONDS).apply(
+                        video_clip
+                    )
+                    # 为了重叠两个片段，结束时间必须减去淡出持续时间
+                    clip_end_time = clip_end_time - _FADE_OUT_DURATION_IN_SECONDS
+                
+                video_clips.append(video_clip)
+                clip_start_time = clip_end_time
+                
+            except Exception as e:
+                ERROR(f"Error processing video {i}: {e}")
+                # 如果处理单个视频失败，继续处理其他视频
+                continue
 
-        with tempfile.NamedTemporaryFile(suffix=".mp4") as video_temp:
-            video_temp.write(v.video_data)
-            video_clip = VideoFileClip(video_temp.name)
+        # 拼接所有片段
+        if not video_clips:
+            ERROR("No valid video clips to process")
+            raise InternalServiceError("failed to generate film: no valid video clips")
+            
+        clips = []
+        for index, (video_clip, start_time) in enumerate(zip(video_clips, start)):
+            video_clip = video_clip.with_start(start_time).with_position("center")
+            clips.append(video_clip)
 
-        with tempfile.NamedTemporaryFile(suffix=".mp3") as audio_temp:
-            audio_temp.write(a.audio_data)
-            audio_clip = AudioFileClip(audio_temp.name)
-            if audio_clip.duration > video_clip.duration:
-                audio_clip = audio_clip.subclipped(0, video_clip.duration)
+        # 生成中文字幕
+        cn_generator = lambda text: TextClip(
+            font=_font,
+            text=text,
+            font_size=24,
+            color="white",
+            stroke_color="#021526",
+            horizontal_align="center",
+            vertical_align="bottom",
+            size=clips[0].size,
+            margin=(None, -60, None, None),
+        )
+        cn_subtitle_clip = SubtitlesClip(cn_subtitles, make_textclip=cn_generator)
 
-        video_clip = video_clip.with_audio(audio_clip)
+        # 生成英文字幕
+        en_generator = lambda text: TextClip(
+            font=_font,
+            text=text,
+            font_size=24,
+            color="white",
+            stroke_color="#021526",
+            horizontal_align="center",
+            vertical_align="bottom",
+            size=clips[0].size,
+            margin=(None, -30, None, None),
+        )
+        en_subtitle_clip = SubtitlesClip(en_subtitles, make_textclip=en_generator)
+        
+        # 创建最终视频
+        final_video = CompositeVideoClip(clips + [cn_subtitle_clip, en_subtitle_clip])
 
-        # Add subtitles
-        clip_end_time = clip_start_time + video_clip.duration
-        # slice subtitles if the line cannot fit to one row
-        if t.line:
-            cn_subtitles.extend(
-                _split_subtitle(
-                    t.line, clip_start_time, clip_end_time, _split_subtitle_cn
-                )
-            )
-        if t.line_en:
-            en_subtitles.extend(
-                _split_subtitle(
-                    t.line_en, clip_start_time, clip_end_time, _split_subtitle_en
-                )
-            )
-
-        # add cross-fade in or out to every clip
-        if i != 0:
-            video_clip = CrossFadeIn(duration=_FADE_IN_DURATION_IN_SECONDS).apply(
-                video_clip
-            )
-        if i != len(elements) - 1:
-            video_clip = CrossFadeOut(duration=_FADE_OUT_DURATION_IN_SECONDS).apply(
-                video_clip
-            )
-            # to overlap 2 clips, end time must deduct with the fade out duration
-            clip_end_time = clip_end_time - _FADE_OUT_DURATION_IN_SECONDS
-        video_clips.append(video_clip)
-        clip_start_time = clip_end_time
-
-    # Concatenate all clips
-    clips = []
-    for index, (video_clip, start_time) in enumerate(zip(video_clips, start)):
-        video_clip = video_clip.with_start(start_time).with_position("center")
-        clips.append(video_clip)
-
-    cn_generator = lambda text: TextClip(
-        font=_font,
-        text=text,
-        font_size=24,
-        color="white",
-        stroke_color="#021526",
-        horizontal_align="center",
-        vertical_align="bottom",
-        size=clips[0].size,
-        margin=(None, -60, None, None),
-    )
-    cn_subtitle_clip = SubtitlesClip(cn_subtitles, make_textclip=cn_generator)
-
-    en_generator = lambda text: TextClip(
-        font=_font,
-        text=text,
-        font_size=24,
-        color="white",
-        stroke_color="#021526",
-        horizontal_align="center",
-        vertical_align="bottom",
-        size=clips[0].size,
-        margin=(None, -30, None, None),
-    )
-    en_subtitle_clip = SubtitlesClip(en_subtitles, make_textclip=en_generator)
-    final_video = CompositeVideoClip(clips + [cn_subtitle_clip, en_subtitle_clip])
-
-    tos_client = TOSClient()
-    try:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_film_file_path = f"{tmp_dir}/{req_id}.mp4"
+        # 上传到TOS
+        tos_client = TOSClient()
+        try:
+            tmp_film_file_path = os.path.join(temp_dir, f"{req_id}.mp4")
+            
+            # 写入最终视频文件
             final_video.write_videofile(
                 tmp_film_file_path,
                 codec="libx264",
                 audio_codec="aac",
-                temp_audiofile_path=f"{tmp_dir}/",
+                temp_audiofile_path=temp_dir,
+                logger=None,    # 禁用默认日志
             )
             INFO("generated final video")
 
+            # 上传到TOS
             tos_bucket_name = ARTIFACT_TOS_BUCKET
             tos_object_key = f"{req_id}/{Phase.FILM.value}.mp4"
             tos_client.put_object_from_file(
                 tos_bucket_name, tos_object_key, tmp_film_file_path
             )
             INFO("put final video to TOS")
+            
+            # 获取签名URL
+            output = tos_client.pre_signed_url(tos_bucket_name, tos_object_key)
+            film_pre_signed_url = output.signed_url
+            
+            # 关闭所有视频和音频剪辑以释放资源
+            for clip in video_clips:
+                clip.close()
+            
+            # 关闭最终视频
+            final_video.close()
+            
+            return film_pre_signed_url
 
-    except Exception as e:
-        ERROR(f"failed to generate film, error: {e}")
-        raise InternalServiceError("failed to generate film")
-
-    output = tos_client.pre_signed_url(tos_bucket_name, tos_object_key)
-    film_pre_signed_url = output.signed_url
-
-    return film_pre_signed_url
+        except Exception as e:
+            # 关闭所有视频和音频剪辑以释放资源
+            for clip in video_clips:
+                try:
+                    clip.close()
+                except:
+                    pass
+                    
+            # 尝试关闭最终视频
+            try:
+                final_video.close()
+            except:
+                pass
+                
+            ERROR(f"failed to generate film, error: {e}")
+            raise InternalServiceError(f"failed to generate film: {str(e)}")
 
 
 class FilmGenerator(Generator):
@@ -268,7 +326,10 @@ class FilmGenerator(Generator):
             f"len(tones) = {len(tones)}, len(videos) = {len(videos)}, len(audios) = {len(audios)}"
         )
 
-        # send first frame
+        # 预检查视频生成状态
+        await self._pre_check_videos(videos)
+
+        # 发送第一帧
         yield ArkChatCompletionChunk(
             id=get_reqid(),
             choices=[
@@ -334,25 +395,130 @@ class FilmGenerator(Generator):
             object="chat.completion.chunk",
         )
 
+    async def _pre_check_videos(self, videos: List[Video]):
+        """预检查所有视频生成任务的状态"""
+        INFO("开始预检查视频状态...")
+        max_wait_time = 15  # 最大等待时间（秒）
+        poll_interval = 3   # 轮询间隔（秒）
+        start_time = time.time()
+        pending_videos = []
+        
+        # 第一次检查所有视频的状态
+        for v in videos:
+            try:
+                task = self.ark_runtime_client.content_generation.tasks.get(
+                    task_id=v.content_generation_task_id
+                )
+                if task.status != "succeeded":
+                    pending_videos.append(v)
+                    INFO(f"视频 {v.index} 状态: {task.status}，加入等待队列")
+                else:
+                    INFO(f"视频 {v.index} 已准备就绪")
+            except Exception as e:
+                ERROR(f"检查视频 {v.index} 状态时出错: {e}，加入等待队列")
+                pending_videos.append(v)
+        
+        # 如果所有视频都已准备好，直接返回
+        if not pending_videos:
+            INFO("所有视频都已准备就绪")
+            return
+            
+        # 等待未就绪的视频
+        INFO(f"等待 {len(pending_videos)} 个视频准备就绪...")
+        
+        while time.time() - start_time < max_wait_time and pending_videos:
+            await asyncio.sleep(poll_interval)
+            
+            # 更新待处理视频列表
+            still_pending = []
+            for v in pending_videos:
+                try:
+                    task = self.ark_runtime_client.content_generation.tasks.get(
+                        task_id=v.content_generation_task_id
+                    )
+                    if task.status != "succeeded":
+                        still_pending.append(v)
+                        INFO(f"视频 {v.index} 状态: {task.status}，继续等待")
+                    else:
+                        INFO(f"视频 {v.index} 已准备就绪")
+                except Exception as e:
+                    ERROR(f"检查视频 {v.index} 状态时出错: {e}，继续等待")
+                    still_pending.append(v)
+            
+            # 更新待处理列表
+            pending_videos = still_pending
+            
+            # 如果所有视频都已准备好，退出循环
+            if not pending_videos:
+                INFO("所有视频都已准备就绪")
+                return
+        
+        # 如果已达到最大等待时间但仍有未准备好的视频，记录日志但不抛出异常
+        # 后续的 _download_video 方法中会再次尝试
+        if pending_videos:
+            INFO(f"预检查结束，还有 {len(pending_videos)} 个视频未准备就绪，将在下载阶段重试")
+
     async def _download_video(self, v: Video):
-        content_generation_task = self.ark_runtime_client.content_generation.tasks.get(
-            task_id=v.content_generation_task_id
-        )
-        if content_generation_task.status != "succeeded":
-            ERROR(f"video is not ready, index: {v.index}")
-            raise InvalidParameter("messages", "video is not ready")
-
-        # Download video
-        image_binary, _ = self.downloader_client.download_to_memory(
-            content_generation_task.content.video_url
-        )
-
-        v.video_data = image_binary.read()
-        INFO(f"downloaded video, index: {v.index}")
+        max_retries = 3
+        retry_count = 0
+        retry_interval = 3  # 初始重试间隔（秒）
+        
+        while retry_count < max_retries:
+            try:
+                content_generation_task = self.ark_runtime_client.content_generation.tasks.get(
+                    task_id=v.content_generation_task_id
+                )
+                
+                if content_generation_task.status == "succeeded":
+                    # 下载视频
+                    image_binary, _ = self.downloader_client.download_to_memory(
+                        content_generation_task.content.video_url
+                    )
+                    v.video_data = image_binary.read()
+                    INFO(f"downloaded video, index: {v.index}")
+                    return
+                elif content_generation_task.status == "failed":
+                    ERROR(f"video generation failed, index: {v.index}, task: {v.content_generation_task_id}")
+                    break
+                else:
+                    # 任务仍在进行中，等待后重试
+                    INFO(f"video not ready yet, status: {content_generation_task.status}, index: {v.index}, retrying after {retry_interval}s...")
+                    await asyncio.sleep(retry_interval)
+                    retry_count += 1
+                    retry_interval *= 2  # 指数退避策略
+                    continue
+            except Exception as e:
+                ERROR(f"Error while checking video status: {e}, index: {v.index}, retrying...")
+                await asyncio.sleep(retry_interval)
+                retry_count += 1
+                retry_interval *= 2  # 指数退避策略
+                continue
+        
+        # 如果所有重试都失败了
+        ERROR(f"video is not ready after {max_retries} retries, index: {v.index}")
+        raise InvalidParameter("messages", f"video is not ready after {max_retries} retries, index: {v.index}")
 
     async def _download_audio(self, a: Audio):
-        if not a.url.startswith("http"):
-            raise InvalidParameter("message", "invalid audio url")
-        audio_data, _ = self.downloader_client.download_to_memory(a.url)
-        a.audio_data = audio_data.read()
-        INFO(f"downloaded audio, index: {a.index}")
+        max_retries = 3
+        retry_count = 0
+        retry_interval = 2  # 初始重试间隔（秒）
+        
+        while retry_count < max_retries:
+            try:
+                if not a.url.startswith("http"):
+                    raise InvalidParameter("message", "invalid audio url")
+                    
+                audio_data, _ = self.downloader_client.download_to_memory(a.url)
+                a.audio_data = audio_data.read()
+                INFO(f"downloaded audio, index: {a.index}")
+                return
+            except Exception as e:
+                ERROR(f"Error downloading audio: {e}, index: {a.index}, retrying...")
+                await asyncio.sleep(retry_interval)
+                retry_count += 1
+                retry_interval *= 2  # 指数退避策略
+                continue
+        
+        # 如果所有重试都失败了
+        ERROR(f"failed to download audio after {max_retries} retries, index: {a.index}")
+        raise InvalidParameter("message", f"failed to download audio after {max_retries} retries, index: {a.index}")

@@ -13,7 +13,8 @@ import re
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
-from arkitect.core.component.llm.model import ArkChatRequest, ArkMessage
+from app.mode import Mode
+from arkitect.types.llm.model import ArkChatRequest, ArkMessage
 from arkitect.core.errors import InvalidParameter
 from arkitect.telemetry.logger import ERROR
 

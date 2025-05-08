@@ -12,7 +12,7 @@
 from typing import AsyncIterable, List
 
 from arkitect.core.component.llm import BaseChatLanguageModel
-from arkitect.core.component.llm.model import (
+from arkitect.types.llm.model import (
     ArkChatCompletionChunk,
     ArkChatParameters,
     ArkMessage,
@@ -36,6 +36,7 @@ class LLMClient:
         )
 
         llm_chat = BaseChatLanguageModel(
+            model=self.endpoint_id,
             endpoint_id=self.endpoint_id,
             messages=messages,
             parameters=ArkChatParameters(temperature=1.0, top_p=0.7),
