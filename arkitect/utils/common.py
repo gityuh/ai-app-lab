@@ -68,9 +68,9 @@ class LazyLoadSingleton(Generic[T]):
         if not cls._instance or cls.is_outdated():
             async with cls._lock:
                 if (not cls._instance) or cls.is_outdated():
-                    assert hasattr(
-                        cls, "async_init"
-                    ), "async singletons must define async_init function"
+                    assert hasattr(cls, "async_init"), (
+                        "async singletons must define async_init function"
+                    )
                     cls._instance = await cls.async_init(*args, **kwargs)
                     cls._refresh_time = time.time()
                     logger.debug("singleton class initialized", name=cls.__name__)
