@@ -16,7 +16,7 @@ from arkitect.core.component.tool import MCPClient
 
 import multiprocessing
 import time
-from utils import check_server_working, _start_server
+from utils import check_server_working, _start_server, _start_http_streamable_server
 
 
 async def test_connect_to_sse_client():
@@ -48,7 +48,37 @@ async def test_connect_to_sse_client():
     server_process.kill()
 
 
+async def test_connect_to_http_streamable_client():
+    # Start http streamable server in a separate process
+    server_process = multiprocessing.Process(target=_start_http_streamable_server, daemon=True)
+    server_process.start()
+
+    # Wait a bit to ensure server starts
+    time.sleep(3)
+
+    client = MCPClient(server_url="http://localhost:8001/mcp/", transport="streamable-http")
+    await client.connect_to_server()
+    assert await check_server_working(
+        client=client,
+        expected_tools={
+            "adder": {"input": {"a": 1, "b": 2}, "output": "3"},
+            "greeting": {"input": {"name": "John"}, "output": "Hello, John!"},
+        },
+    )
+    assert await check_server_working(
+        client=client,
+        use_cache=True,
+        expected_tools={
+            "adder": {"input": {"a": 1, "b": 2}, "output": "3"},
+            "greeting": {"input": {"name": "John"}, "output": "Hello, John!"},
+        },
+    )
+    await client.cleanup()
+    server_process.kill()
+
+
 if __name__ == "__main__":
     import asyncio
 
     asyncio.run(test_connect_to_sse_client())
+    asyncio.run(test_connect_to_http_streamable_client())
