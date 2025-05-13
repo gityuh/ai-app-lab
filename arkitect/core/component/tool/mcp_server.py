@@ -31,9 +31,9 @@ class ArkFastMCP(FastMCP):
     def __init__(self, *args, **kwargs):  # type: ignore
         super().__init__(*args, **kwargs)
 
-    def run(
+    def run(  # type: ignore
         self,
-        transport: Literal["stdio", "sse"] = "stdio",
+        transport: Literal["stdio", "sse", "streamable-http"] = "stdio",
         trace_on: bool = True,
         log_dir: str | None = None,
     ) -> None:

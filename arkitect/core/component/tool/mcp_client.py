@@ -148,7 +148,7 @@ class MCPClient:
         """Connect to an MCP server running with streamable http transport"""
         streams = await self.exit_stack.enter_async_context(
             streamablehttp_client(
-                url=self.server_url,
+                url=self.server_url,  # type: ignore
                 headers=self.headers,
                 timeout=timedelta(seconds=self.timeout),
                 sse_read_timeout=timedelta(seconds=self.sse_read_timeout),
