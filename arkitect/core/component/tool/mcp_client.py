@@ -14,6 +14,7 @@
 
 import asyncio
 import datetime
+from datetime import timedelta
 import logging
 from contextlib import AsyncExitStack
 from typing import Any, Dict
@@ -34,6 +35,8 @@ from mcp import (
 )
 from mcp.client.sse import sse_client
 from mcp.client.stdio import get_default_environment
+from mcp.client.streamable_http import streamablehttp_client
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +53,7 @@ class MCPClient:
         timeout: float = 30,
         sse_read_timeout: float = 60 * 5,
         exit_stack: AsyncExitStack | None = None,
+        transport: str | None = None,
     ) -> None:
         self.command = command
         self.arguments = arguments
@@ -58,6 +62,7 @@ class MCPClient:
         self.headers = headers
         self.timeout: float = timeout
         self.sse_read_timeout = sse_read_timeout
+        self.transport = transport
 
         # Initialize session and client objects
         self.session: ClientSession = None  # type: ignore
@@ -78,7 +83,10 @@ class MCPClient:
         if self.command is not None and self.server_url is not None:
             raise ValueError("You should set either command or server_url")
         if self.server_url is not None:
-            await self._connect_to_sse_server()
+            if self.transport == "streamable-http":
+                await self._connect_to_streamablehttp_server()
+            else:
+                await self._connect_to_sse_server()
         elif self.command is not None:
             await self._connect_to_stdio_server()
         else:
@@ -132,6 +140,25 @@ class MCPClient:
 
         self.session = await self.exit_stack.enter_async_context(
             ClientSession(*streams)
+        )
+
+    async def _connect_to_streamablehttp_server(
+        self,
+    ) -> None:
+        """Connect to an MCP server running with streamable http transport"""
+        streams = await self.exit_stack.enter_async_context(
+            streamablehttp_client(
+                url=self.server_url,  # type: ignore
+                headers=self.headers,
+                timeout=timedelta(seconds=self.timeout),
+                sse_read_timeout=timedelta(seconds=self.sse_read_timeout),
+            )
+        )
+
+        read, write, _ = streams
+
+        self.session = await self.exit_stack.enter_async_context(
+            ClientSession(read, write)
         )
 
     async def _init(self) -> None:
