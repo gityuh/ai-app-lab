@@ -90,7 +90,7 @@ class AsyncASRClient(BaseAsyncASRClient, ABC):
         self.user = user
         self.model_name = model_name
 
-        self.conn: Optional[websockets.WebSocketClientProtocol] = None
+        self.conn: Optional[websockets.WebSocketClientProtocol] = None  # type: ignore
         self.session_id: Optional[str] = None
         self.inited = False
 
