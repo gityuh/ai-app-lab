@@ -61,7 +61,7 @@ class AsyncTTSClient(AsyncBaseTTSClient):
         self.log_id = log_id
         self.base_url = base_url
 
-        self.conn: Optional[websockets.WebSocketClientProtocol] = None
+        self.conn: Optional[websockets.WebSocketClientProtocol] = None  # type: ignore
         self.session_id: Optional[str] = None
         self.connection_params: ConnectionParams = connection_params
         self.inited = False
