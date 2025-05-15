@@ -43,6 +43,7 @@ const AssistantMessage = (message: AssistantMessageProps) => {
   const [storyboardContent, setStoryboardContent] = useState('');
   const [localContent, setLocalContent] = useState(content);
   const latestContentRef = useRef(''); // 用于保存最新修改后的内容
+  const contentUpdatedRef = useRef(false); // 用于标记内容是否已更新
   
   // 通过topMessage的finish 来判断是否可以操作
   const topMessage = useContext(BotMessageContext);
@@ -74,21 +75,6 @@ const AssistantMessage = (message: AssistantMessageProps) => {
     displayName: findModelInfo?.Name || '',
     modelName: findModelInfo?.ModelName || '',
     imgSrc: findModelInfo?.Icon || '',
-  };
-
-  useEffect(() => {
-    setLocalContent(content);
-  }, [content]);
-
-  const handleNext = async () => {
-    if (topMessage.phase === VideoGeneratorTaskPhase.PhaseStoryBoard) {
-      updateAutoNext(true);
-    }
-    if (topMessage.phase === VideoGeneratorTaskPhase.PhaseScript) {
-      sendNextMessage('生成分镜脚本', false);
-    } else {
-      sendNextMessage('开始生成视频', false);
-    }
   };
 
   // 获取最新的分镜脚本内容
@@ -131,6 +117,105 @@ const AssistantMessage = (message: AssistantMessageProps) => {
     const content = localContent.replace(/^phase=StoryBoard\s*\n*/i, '').trim();
     latestContentRef.current = content; // 缓存最新内容
     return content;
+  };
+
+  // 更新原始消息列表中的内容
+  const updateOriginalMessage = (newContent: string) => {
+    const messageIndex = messages.findIndex(msg => {
+      if (msg.role !== 'assistant') return false;
+      
+      // 确保是BotMessage类型
+      const botMsg = msg as BotMessage;
+      if (!botMsg.versions || !botMsg.currentVersion) return false;
+      
+      return botMsg.versions[botMsg.currentVersion].some((ver: any) => 
+        ver.type === EMessageType.Message && 
+        ver.content.startsWith(`phase=${VideoGeneratorTaskPhase.PhaseStoryBoard}`)
+      );
+    });
+    
+    if (messageIndex !== -1) {
+      // 克隆消息数组
+      const newMessages = [...messages];
+      const currentMessage = JSON.parse(JSON.stringify(newMessages[messageIndex])) as BotMessage;
+      
+      // 创建新版本
+      currentMessage.currentVersion = currentMessage.currentVersion + 1;
+      currentMessage.versions[currentMessage.currentVersion] = [
+        {
+          id: Date.now(),
+          type: EMessageType.Message,
+          content: `phase=${VideoGeneratorTaskPhase.PhaseStoryBoard}\n${newContent}`,
+          finish: true,
+          logid: '',
+          finish_reason: 'stop',
+        }
+      ];
+      
+      // 更新消息数组
+      newMessages[messageIndex] = currentMessage;
+      setMessages(newMessages);
+    }
+  };
+
+  // 在组件挂载时检查是否有保存的分镜脚本内容
+  useEffect(() => {
+    // 只在组件挂载且是分镜脚本阶段时执行一次
+    if (topMessage.phase === VideoGeneratorTaskPhase.PhaseStoryBoard && !contentUpdatedRef.current) {
+      try {
+        const savedContent = localStorage.getItem('storyboard_content');
+        const saveTimestamp = localStorage.getItem('storyboard_update_timestamp');
+        
+        if (savedContent && saveTimestamp) {
+          // 检查内容是否是最近保存的（例如在过去1小时内）
+          const timestamp = parseInt(saveTimestamp, 10);
+          const now = Date.now();
+          const oneHour = 60 * 60 * 1000; // 1小时的毫秒数
+          
+          if (now - timestamp < oneHour) {
+            console.log('恢复保存的分镜脚本内容:', savedContent);
+            
+            // 更新本地显示内容
+            setLocalContent(savedContent);
+            
+            // 更新引用缓存
+            latestContentRef.current = savedContent;
+            
+            // 同时更新确认数据，确保后续流程使用最新内容
+            updateConfirmationMessage({
+              [UserConfirmationDataKey.StoryBoards]: savedContent
+            });
+            
+            // 更新原始消息
+            updateOriginalMessage(savedContent);
+            
+            // 标记内容已更新
+            contentUpdatedRef.current = true;
+          }
+        }
+      } catch (e) {
+        console.error('恢复保存的分镜脚本内容失败:', e);
+      }
+    }
+  }, [topMessage.phase]);
+
+  // 在内容变化时更新本地显示
+  useEffect(() => {
+    // 如果内容已经从localStorage更新过，则不再覆盖
+    if (!contentUpdatedRef.current) {
+      setLocalContent(content);
+    }
+  }, [content]);
+
+  const handleNext = async () => {
+    if (topMessage.phase === VideoGeneratorTaskPhase.PhaseStoryBoard) {
+      updateAutoNext(true);
+    }
+    if (topMessage.phase === VideoGeneratorTaskPhase.PhaseScript) {
+      sendNextMessage('生成分镜脚本', false);
+    } else {
+      sendNextMessage('开始生成视频', false);
+    }
   };
 
   const handleEditStoryboard = () => {
@@ -203,55 +288,27 @@ const AssistantMessage = (message: AssistantMessageProps) => {
       latestContentRef.current = newContent;
       
       // 更新本地内容以显示更新后的内容
-      setLocalContent(`phase=${VideoGeneratorTaskPhase.PhaseStoryBoard}\n${newContent}`);
+      setLocalContent(newContent);
       
       // 确保下次打开编辑窗口时能获取到最新内容
       setStoryboardContent(newContent);
+      
+      // 标记内容已更新
+      contentUpdatedRef.current = true;
       
       // 尝试持久化保存
       try {
         localStorage.setItem('storyboard_content', newContent);
         localStorage.setItem('storyboard_update_timestamp', Date.now().toString());
+        
+        // 存储当前URL路径作为页面标识
+        localStorage.setItem('storyboard_page_path', window.location.pathname);
       } catch (e) {
         console.error('保存到localStorage失败:', e);
       }
       
       // 更新原始消息列表中的内容
-      const messageIndex = messages.findIndex(msg => {
-        if (msg.role !== 'assistant') return false;
-        
-        // 确保是BotMessage类型
-        const botMsg = msg as BotMessage;
-        if (!botMsg.versions || !botMsg.currentVersion) return false;
-        
-        return botMsg.versions[botMsg.currentVersion].some(ver => 
-          ver.type === EMessageType.Message && 
-          ver.content.startsWith(`phase=${VideoGeneratorTaskPhase.PhaseStoryBoard}`)
-        );
-      });
-      
-      if (messageIndex !== -1) {
-        // 克隆消息数组
-        const newMessages = [...messages];
-        const currentMessage = JSON.parse(JSON.stringify(newMessages[messageIndex])) as BotMessage;
-        
-        // 创建新版本
-        currentMessage.currentVersion = currentMessage.currentVersion + 1;
-        currentMessage.versions[currentMessage.currentVersion] = [
-          {
-            id: Date.now(),
-            type: EMessageType.Message,
-            content: `phase=${VideoGeneratorTaskPhase.PhaseStoryBoard}\n${newContent}`,
-            finish: true,
-            logid: '',
-            finish_reason: 'stop',
-          }
-        ];
-        
-        // 更新消息数组
-        newMessages[messageIndex] = currentMessage;
-        setMessages(newMessages);
-      }
+      updateOriginalMessage(newContent);
     } catch (error) {
       console.error('更新消息内容失败:', error);
     }
