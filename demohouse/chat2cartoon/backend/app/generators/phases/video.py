@@ -38,7 +38,7 @@ from arkitect.types.llm.model import (
     ArkChatResponse,
 )
 from arkitect.core.errors import InvalidParameter
-from arkitect.telemetry.logger import ERROR, INFO
+from arkitect.telemetry.logger import ERROR, INFO, WARN
 from arkitect.utils.context import get_reqid, get_resource_id
 
 
@@ -46,35 +46,60 @@ def zip_video_descriptions_and_first_frame_images(
     video_descriptions: List[VideoDescription],
     first_frame_images: List[FirstFrameImage],
 ) -> List[Tuple[int, VideoDescription, FirstFrameImage]]:
+    # 如果数量不匹配，记录警告并尝试处理
+    if len(video_descriptions) != len(first_frame_images):
+        WARN(
+            f"数量不匹配：first_frame_images={len(first_frame_images)}, video_descriptions={len(video_descriptions)}"
+        )
+        # 以较小的数量为准
+        min_length = min(len(video_descriptions), len(first_frame_images))
+        if min_length == 0:
+            ERROR("没有足够的数据来生成视频")
+            raise InvalidParameter(
+                "messages", "没有足够的数据来生成视频"
+            )
+        
+        # 截断较长的列表
+        if len(video_descriptions) > min_length:
+            WARN(f"截断video_descriptions从{len(video_descriptions)}到{min_length}")
+            video_descriptions = video_descriptions[:min_length]
+        elif len(first_frame_images) > min_length:
+            WARN(f"截断first_frame_images从{len(first_frame_images)}到{min_length}")
+            first_frame_images = first_frame_images[:min_length]
+    
     video_descriptions_by_index = {i: s for i, s in enumerate(video_descriptions)}
     first_frame_images_by_index = {ffi.index: ffi for ffi in first_frame_images}
 
-    # zipped dictionaries with the same index
+    # 重新调整first_frame_images的索引以匹配video_descriptions
+    adjusted_first_frame_images = []
+    for i, desc in enumerate(video_descriptions):
+        # 优先使用索引匹配的图像
+        if i in first_frame_images_by_index:
+            ffi = first_frame_images_by_index[i]
+        # 如果索引不匹配，尝试按顺序选择图像
+        else:
+            available_images = [img for img in first_frame_images if img.index not in [a.index for a in adjusted_first_frame_images]]
+            if available_images:
+                ffi = available_images[0]
+                WARN(f"对视频{i}使用不匹配的图像，原索引:{ffi.index}")
+                # 调整索引以匹配
+                ffi.index = i
+            else:
+                ERROR(f"无法为视频{i}找到对应的图像")
+                raise InvalidParameter("messages", f"缺少索引为{i}的首帧图像")
+        
+        adjusted_first_frame_images.append(ffi)
+    
+    # 创建调整后的元组列表
     zipped = []
-    all_indices = set(video_descriptions_by_index.keys()) | set(
-        first_frame_images_by_index.keys()
-    )
-
-    for index in all_indices:
-        if index not in video_descriptions_by_index:
-            ERROR(f"failed to find index {index} in video_descriptions_by_index")
-            raise InvalidParameter(
-                "messages", f"failed to find index {index} in videos"
-            )
-        if index not in first_frame_images_by_index:
-            ERROR(f"failed to find index {index} in first_frame_images_by_index")
-            raise InvalidParameter(
-                "messages", f"failed to find index {index} in first_frame_images"
-            )
-
-        zipped.append(
-            (
-                index,
-                video_descriptions_by_index[index],
-                first_frame_images_by_index[index],
-            )
-        )
-
+    for i, desc in enumerate(video_descriptions):
+        matching_image = next((img for img in adjusted_first_frame_images if img.index == i), None)
+        if matching_image:
+            zipped.append((i, desc, matching_image))
+        else:
+            ERROR(f"无法为视频{i}找到对应的图像")
+            raise InvalidParameter("messages", f"缺少索引为{i}的首帧图像")
+    
     return zipped
 
 
@@ -103,10 +128,32 @@ class VideoGenerator(Generator):
         if not video_descriptions:
             ERROR("video descriptions not found")
             raise InvalidParameter("messages", "video descriptions not found")
-
+            
+        # 检查数量并尝试修复
+        if len(first_frame_images) != len(video_descriptions):
+            WARN(
+                f"first frame images 和 video descriptions 数量不匹配：len(first_frame_images)={len(first_frame_images)}, len(video_descriptions)={len(video_descriptions)}"
+            )
+            
+            # 如果first_frame_images数量更多，根据索引修复
+            if len(first_frame_images) > len(video_descriptions):
+                WARN("尝试根据索引调整first_frame_images")
+                # 按索引排序
+                sorted_images = sorted(first_frame_images, key=lambda ffi: ffi.index)
+                # 保留与video_descriptions数量相同的图像
+                first_frame_images = sorted_images[:len(video_descriptions)]
+                WARN(f"调整后的first_frame_images数量: {len(first_frame_images)}")
+            
+            # 如果video_descriptions数量更多，截断到与first_frame_images相同
+            elif len(video_descriptions) > len(first_frame_images):
+                WARN("video_descriptions数量多于first_frame_images，将截断多余的描述")
+                video_descriptions = video_descriptions[:len(first_frame_images)]
+                WARN(f"调整后的video_descriptions数量: {len(video_descriptions)}")
+        
+        # 最终检查
         if len(first_frame_images) != len(video_descriptions):
             ERROR(
-                f"first frame images or video description counts are incorrect, len(first_frame_images)={len(first_frame_images)}, len(video_descriptions)={len(video_descriptions)}"
+                f"调整后仍然不匹配: len(first_frame_images)={len(first_frame_images)}, len(video_descriptions)={len(video_descriptions)}"
             )
             raise InvalidParameter(
                 "messages",

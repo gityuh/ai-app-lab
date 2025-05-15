@@ -52,7 +52,14 @@ const EditStoryboard = (props: EditStoryboardProps) => {
 
   // 将场景数组转换回完整的分镜脚本
   const buildContent = (scenes: StoryScene[]) => {
-    return scenes.map((scene, index) => {
+    // 确保所有场景ID都是连续的，从1开始
+    const sortedScenes = [...scenes].sort((a, b) => a.id - b.id);
+    const renumberedScenes = sortedScenes.map((scene, index) => ({
+      ...scene,
+      id: index + 1,
+    }));
+    
+    return renumberedScenes.map((scene, index) => {
       return `分镜${index + 1}：\n角色：${scene.characters}\n画面：${scene.scene}\n台词：${scene.dialogue}`;
     }).join('\n\n');
   };
@@ -60,7 +67,13 @@ const EditStoryboard = (props: EditStoryboardProps) => {
   useEffect(() => {
     if (visible && content) {
       setEditedContent(content);
-      setScenes(parseContent(content));
+      const parsedScenes = parseContent(content);
+      // 确保场景ID是连续的
+      const renumberedScenes = parsedScenes.map((scene, index) => ({
+        ...scene,
+        id: index + 1,
+      }));
+      setScenes(renumberedScenes);
     }
   }, [visible, content]);
 
@@ -72,6 +85,39 @@ const EditStoryboard = (props: EditStoryboardProps) => {
         Message.error('分镜脚本内容不能为空');
         return;
       }
+      
+      // 检查分镜数量是否正确
+      const sceneMatches = editedContent.match(/分镜\d+：/g);
+      if (!sceneMatches) {
+        Message.error('分镜脚本格式不正确，请检查');
+        return;
+      }
+      
+      // 确保分镜编号连续且从1开始
+      const sceneNumbers = sceneMatches.map(match => {
+        const num = parseInt(match.match(/\d+/)?.[0] || '0', 10);
+        return num;
+      }).sort((a, b) => a - b);
+      
+      // 检查是否有重复或缺失的分镜编号
+      for (let i = 0; i < sceneNumbers.length; i++) {
+        if (sceneNumbers[i] !== i + 1) {
+          // 尝试自动修复
+          try {
+            const fixedContent = editedContent.replace(/分镜\d+：/g, (match, offset) => {
+              const index = editedContent.substring(0, offset).match(/分镜\d+：/g)?.length || 0;
+              return `分镜${index + 1}：`;
+            });
+            setEditedContent(fixedContent);
+            Message.warning('已自动修复分镜编号，请检查内容是否正确');
+            return;
+          } catch (e) {
+            Message.error('分镜编号不连续，请按顺序编号从1开始');
+            return;
+          }
+        }
+      }
+      
       finalContent = editedContent;
     } else {
       if (scenes.length === 0) {
