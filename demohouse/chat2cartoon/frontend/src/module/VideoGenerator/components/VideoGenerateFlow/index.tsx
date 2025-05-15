@@ -52,6 +52,7 @@ import {
 import FlowItemTitle from '../FlowItemTitle';
 import LoadingFilm from '../LoadingFilm';
 import useFlowPhaseData from './useFlowPhaseData';
+import ContinueButton from '../ContinueButton';
 
 interface Props {
   messages: ComplexMessage;
@@ -907,13 +908,60 @@ const VideoGenerateFlow = (props: Props) => {
     }
   }, [runningPhaseStatus]);
 
+  // 定义需要显示ContinueButton的阶段
+  const stagesToShowContinueButton = [
+    VideoGeneratorTaskPhase.PhaseRoleDescription,
+    VideoGeneratorTaskPhase.PhaseRoleImage,
+    VideoGeneratorTaskPhase.PhaseFirstFrameDescription,
+    VideoGeneratorTaskPhase.PhaseFirstFrameImage,
+    VideoGeneratorTaskPhase.PhaseVideoDescription,
+    VideoGeneratorTaskPhase.PhaseVideo,
+    VideoGeneratorTaskPhase.PhaseTone,
+    VideoGeneratorTaskPhase.PhaseAudio,
+  ];
+
+  // 判断当前是否需要显示ContinueButton
+  const shouldShowContinueButton = () => {
+    if (!finishPhase || runningPhaseStatus !== RunningPhaseStatus.Success) {
+      return false;
+    }
+    return stagesToShowContinueButton.includes(finishPhase as VideoGeneratorTaskPhase);
+  };
+
+  // 处理ContinueButton点击事件
+  const handleContinueClick = () => {
+    if (finishPhase && stagesToShowContinueButton.includes(finishPhase as VideoGeneratorTaskPhase)) {
+      proceedNextPhase(finishPhase);
+    }
+  };
+
+  // 在render末尾添加ContinueButton
+  const renderContinueButton = () => {
+    if (shouldShowContinueButton()) {
+      return (
+        <div className={styles.continueButtonContainer}>
+          <ContinueButton
+            phase={finishPhase}
+            onClick={handleContinueClick}
+            loading={runningPhaseStatus === RunningPhaseStatus.Pending}
+          />
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <>
-      <div className={styles['base-flow-wrapper']}>
-        <BaseFlow items={flowList} current={currentPhaseIndex} />
+    <div className="flex flex-col items-center w-full">
+      {renderContinueButton()}
+      <div>
+        <div className={styles['base-flow-wrapper']}>
+          <BaseFlow items={flowList} current={currentPhaseIndex} />
+        </div>
+        <div className={styles.operateButton}>{renderOperationBtn()}</div>
       </div>
-      <div className={styles.operateButton}>{renderOperationBtn()}</div>
-    </>
+      {renderContinueButton()}
+    </div>
   );
 };
 

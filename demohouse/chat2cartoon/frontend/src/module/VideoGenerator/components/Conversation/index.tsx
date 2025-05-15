@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 
 import { Button } from '@arco-design/web-react';
 
@@ -17,17 +17,19 @@ import { IconClean } from '@/images/iconBox';
 import { ChatWindowContext } from '@/components/ChatWindowV2/context';
 import { WatchAndChat } from '@/module/WatchAndChat';
 import { useStartChatWithVideo } from '@/module/WatchAndChat/providers/WatchAndChatProvider/hooks/useStartChatWithVideo';
+import { EMessageType } from '@/components/ChatWindowV2/context';
 
 import { RenderedMessagesContext } from '../../store/RenderedMessages/context';
 import styles from './index.module.less';
 import ChatArea from '../ChatArea';
-import { VideoGeneratorMessageType, VideoGeneratorTaskPhase } from '../../types';
+import { VideoGeneratorMessageType, VideoGeneratorTaskPhase, ComplexMessage } from '../../types';
 import { FlowMiniMap } from '../FlowMiniMap';
 import { usePlaceholderInfo } from './hooks/usePlaceholderInfo';
 import { useScrollToBottom } from '../../hooks/useScrollToBottom';
 import { Placeholder } from './components/Placeholder';
 import { MessageInput } from './components/MessageInput';
 import { InjectContext } from '../../store/Inject/context';
+import EditStoryboard from '../EditStoryboard';
 
 
 const Conversation = () => {
@@ -35,7 +37,7 @@ const Conversation = () => {
   const { LimitIndicator } = slots;
   const { messages, sending, assistantInfo, sendMessageFromInput, startReply, insertBotEmptyMessage } =
     useContext(ChatWindowContext);
-  const { miniMapRef, renderedMessages, finishPhase, autoNext, resetMessages } =
+  const { miniMapRef, renderedMessages, finishPhase, autoNext, resetMessages, correctDescription } =
     useContext(RenderedMessagesContext);
 
   const placeholderInfoShow = usePlaceholderInfo({ assistant: assistantInfo });
@@ -43,6 +45,9 @@ const Conversation = () => {
   const showMessageList = useMemo(() => messages.length > 0, [messages]);
 
   const { scrollRef: chatMessageListRef, setAutoScroll } = useScrollToBottom(!autoNext);
+
+  const [showEditStoryboard, setShowEditStoryboard] = useState(false);
+  const [storyboardContent, setStoryboardContent] = useState('');
 
   const handleScroll = (e: HTMLElement) => {
     if (autoNext) {
@@ -78,10 +83,49 @@ const Conversation = () => {
 
   const { visible: isFullScreen } = useStartChatWithVideo();
 
+  const isStoryboardGenerated = useMemo(() => 
+    finishPhase === VideoGeneratorTaskPhase.PhaseStoryBoard, 
+    [finishPhase]
+  );
+
   return (
     <div className={styles.conversationWrapper}>
       <div className={styles.displayBar}>
         <FlowMiniMap ref={miniMapRef} />
+        {isStoryboardGenerated && (
+          <Button 
+            className={styles.editStoryboardBtn}
+            onClick={() => {
+              // 获取分镜脚本内容
+              const storyboard = renderedMessages.find(
+                msg => msg.role === 'assistant' && 
+                       msg.type === VideoGeneratorMessageType.Multiple && 
+                       'phaseMessageMap' in msg && 
+                       msg.phaseMessageMap[VideoGeneratorTaskPhase.PhaseStoryBoard]
+              ) as ComplexMessage | undefined;
+              
+              if (storyboard && storyboard.phaseMessageMap) {
+                const storyboardPhase = storyboard.phaseMessageMap[VideoGeneratorTaskPhase.PhaseStoryBoard];
+                if (storyboardPhase && storyboardPhase.length > 0) {
+                  // 获取最新的分镜内容
+                  const lastStoryboard = storyboardPhase[storyboardPhase.length - 1];
+                  const messageContent = lastStoryboard.versions[lastStoryboard.currentVersion].find(
+                    (msg: any) => msg.type === EMessageType.Message
+                  );
+                  
+                  if (messageContent) {
+                    // 去掉前缀"phase=StoryBoard"
+                    const content = messageContent.content.replace(/^phase=StoryBoard\s*\n*/i, '').trim();
+                    setStoryboardContent(content);
+                    setShowEditStoryboard(true);
+                  }
+                }
+              }
+            }}
+          >
+            编辑分镜脚本
+          </Button>
+        )}
       </div>
       <div className={styles.conversationContainer}>
         <div
@@ -129,6 +173,17 @@ const Conversation = () => {
         )}
         <WatchAndChat />
       </div>
+      {showEditStoryboard && (
+        <EditStoryboard
+          visible={showEditStoryboard}
+          content={storyboardContent}
+          onOk={(newContent: string) => {
+            setShowEditStoryboard(false);
+            correctDescription(VideoGeneratorTaskPhase.PhaseStoryBoard, newContent);
+          }}
+          onCancel={() => setShowEditStoryboard(false)}
+        />
+      )}
     </div>
   );
 };

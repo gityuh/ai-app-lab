@@ -58,6 +58,8 @@ class T2IClient:
             model_version=_DEFAULT_MODEL_VERSION,
             prompt=prompt,
             return_url=True,
+            width=1280,
+            height=720,
         )
         INFO(f"image_generation raw_req: {req.model_dump_json()}")
 

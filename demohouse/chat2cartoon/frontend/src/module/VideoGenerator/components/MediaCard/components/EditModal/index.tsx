@@ -134,7 +134,7 @@ const EditModal = (props: EditModalProps) => {
                     <div>
                       {type === 'image' ? '图片比例' : '视频比例'}
                     </div>
-                    <div>1:1</div>
+                    <div>16:9</div>
                   </div>
                 )}
                 {type === 'audio' && (

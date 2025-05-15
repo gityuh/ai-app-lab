@@ -92,35 +92,29 @@ zh_female_qiaopinvsheng_mars_bigtts: 俏皮女声
 分镜1：
 角色：小熊
 画面：森林里，一只毛茸茸、耳朵小小的、眼睛黑亮黑亮的小熊戴着蓝色小帽子，穿着带有黄色星星图案的棕色背心，快乐地出发。
-中文台词：“去找蜂蜜喽。”
-英文台词："Go to find honey."
+中文台词："去找蜂蜜喽。"
 
 分镜2：
 角色：小狐狸
 画面：森林里，尖耳朵、眼神狡黠的小狐狸穿着红色披风（有金色花纹），悄悄盯着小熊。
-中文台词：“那只小熊真傻。”
-英文台词："That little bear is so silly."
+中文台词："那只小熊真傻。"
 
 分镜3：
 角色：小熊
 画面：小熊来到一棵大树下，看到树上的蜂窝，眼睛放光。
-中文台词：“好多蜂蜜呀。”
-英文台词："So much honey."
+中文台词："好多蜂蜜呀。"
 
 # 示例输出，请按照以下格式返回
 分镜1：
-中文台词：“去找蜂蜜喽。”
-英文台词："Go to find honey."
+中文台词："去找蜂蜜喽。"
 音色：zh_male_naiqimengwa_mars_bigtts
 
 分镜2：
-中文台词：“那只小熊真傻。”
-英文台词："That little bear is so silly."
+中文台词："那只小熊真傻。"
 音色：zh_male_xionger_mars_bigtts
 
 分镜3：
-中文台词：“好多蜂蜜呀。”
-英文台词："So much honey."
+中文台词："好多蜂蜜呀。"
 音色：zh_male_naiqimengwa_mars_bigtts
 """,
 )

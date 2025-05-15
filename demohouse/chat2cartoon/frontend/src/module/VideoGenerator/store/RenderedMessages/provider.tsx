@@ -541,25 +541,10 @@ const RenderedMessagesProvider = (props: PropsWithChildren<Props>) => {
       }
     }
 
-    // 发起下一次对话
-    // PhaseVideo 需要轮询等待生成完成，需要手动发起下一步
-    if (
-      [
-        VideoGeneratorTaskPhase.PhaseRoleDescription,
-        VideoGeneratorTaskPhase.PhaseRoleImage,
-        VideoGeneratorTaskPhase.PhaseFirstFrameDescription,
-        VideoGeneratorTaskPhase.PhaseFirstFrameImage,
-        VideoGeneratorTaskPhase.PhaseVideoDescription,
-        VideoGeneratorTaskPhase.PhaseTone,
-        VideoGeneratorTaskPhase.PhaseAudio,
-      ].includes(phase as VideoGeneratorTaskPhase) &&
-      autoNextRef.current
-    ) {
-      // 以上 phase 有自动化
-      // 这些阶段，需要主动传入资源信息，进行下一步
-      proceedNextPhase(phase);
-    }
-
+    // 禁用自动进行下一步，改为手动确认模式
+    // 所有阶段都需要手动确认
+    updateAutoNext(false);
+    
     // 本次生成结束
     if (phase === VideoGeneratorTaskPhase.PhaseFilm) {
       setEditing(false);

@@ -108,7 +108,6 @@ def _generate_film(
 
     video_clips = []
     cn_subtitles = []
-    en_subtitles = []
 
     clip_start_time = 0.0
     start = []
@@ -156,12 +155,6 @@ def _generate_film(
                             t.line, clip_start_time, clip_end_time, _split_subtitle_cn
                         )
                     )
-                if t.line_en:
-                    en_subtitles.extend(
-                        _split_subtitle(
-                            t.line_en, clip_start_time, clip_end_time, _split_subtitle_en
-                        )
-                    )
                 
                 # 为每个片段添加淡入淡出效果
                 if i != 0:
@@ -203,26 +196,12 @@ def _generate_film(
             horizontal_align="center",
             vertical_align="bottom",
             size=clips[0].size,
-            margin=(None, -60, None, None),
+            margin=(None, -40, None, None),
         )
         cn_subtitle_clip = SubtitlesClip(cn_subtitles, make_textclip=cn_generator)
-
-        # 生成英文字幕
-        en_generator = lambda text: TextClip(
-            font=_font,
-            text=text,
-            font_size=24,
-            color="white",
-            stroke_color="#021526",
-            horizontal_align="center",
-            vertical_align="bottom",
-            size=clips[0].size,
-            margin=(None, -30, None, None),
-        )
-        en_subtitle_clip = SubtitlesClip(en_subtitles, make_textclip=en_generator)
         
         # 创建最终视频
-        final_video = CompositeVideoClip(clips + [cn_subtitle_clip, en_subtitle_clip])
+        final_video = CompositeVideoClip(clips + [cn_subtitle_clip])
 
         # 上传到TOS
         tos_client = TOSClient()
