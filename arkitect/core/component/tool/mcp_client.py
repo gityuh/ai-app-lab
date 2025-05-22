@@ -54,7 +54,7 @@ class MCPClient:
         sse_read_timeout: float = 60 * 5,
         exit_stack: AsyncExitStack | None = None,
         transport: str | None = None,
-        errlog: TextIO | None = sys.stderr,
+        errlog: TextIO = sys.stderr,
     ) -> None:
         self.command = command
         self.arguments = arguments
