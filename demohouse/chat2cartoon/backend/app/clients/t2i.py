@@ -9,24 +9,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License. 
 
+import os
 import json
-from json import JSONDecodeError
+import requests
 from typing import List, Optional
 
 from pydantic import BaseModel
-from volcengine.visual.VisualService import VisualService
+from volcenginesdkarkruntime import Ark
 
-from app.constants import ARK_ACCESS_KEY, ARK_SECRET_KEY
+from app.constants import ARK_API_KEY
 from arkitect.telemetry.logger import ERROR, INFO
 
-_DEFAULT_REQ_KEY = "high_aes_general_v20_L"
-_DEFAULT_MODEL_VERSION = "general_v2.0_L"
+# 新的文本生成图像模型名称
+TEXT_TO_IMAGE_MODEL = "doubao-seedream-3-0-t2i-250415"
+# 默认方舟服务的接入点
+ARK_BASE_URL = os.getenv("ARK_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
 
-POST_IMG_RISK_NOT_PASS_ERROR_CODE = 50511
-POST_IMG_RISK_NOT_PASS_MESSAGE = "Post Img Risk Not Pass"
-TEXT_RISK_NOT_PASS_ERROR_CODE = 50412
-TEXT_RISK_NOT_PASS_MESSAGE = "Text Risk Not Pass"
-
+# 图片分辨率设置 - 使用更标准的16:9比例
+DEFAULT_WIDTH = 1280  # 更常见的分辨率，更可能被模型支持
+DEFAULT_HEIGHT = 720  # 确保16:9比例 (1024/576=1.78)
 
 class T2IException(Exception):
     def __init__(self, code, message):
@@ -41,56 +42,109 @@ class T2IException(Exception):
 class T2IClient:
     """
     Text-To-Image client used in the RoleImage phase in the chat2cartoon demo
-    API Docs: https://www.volcengine.com/docs/6791/1339374
+    使用火山引擎方舟服务的API生成图像
     """
 
-    _visual_service: VisualService
+    _ark_client = None
+    _headers = None
 
     def __init__(self) -> None:
-        visual_service = VisualService()
-        visual_service.set_ak(ARK_ACCESS_KEY)
-        visual_service.set_sk(ARK_SECRET_KEY)
-        self._visual_service = visual_service
-
-    def image_generation(self, prompt: str) -> List[str]:
-        req = T2ICreateTextToImageRequest(
-            req_key=_DEFAULT_REQ_KEY,
-            model_version=_DEFAULT_MODEL_VERSION,
-            prompt=prompt,
-            return_url=True,
-            width=1280,
-            height=720,
+        if not ARK_API_KEY:
+            raise ValueError("ARK_API_KEY environment variable not set.")
+        
+        # 初始化方舟客户端 - 注意：这里仅初始化客户端，但不直接使用其images属性
+        self._ark_client = Ark(
+            base_url=ARK_BASE_URL,
+            api_key=ARK_API_KEY
         )
-        INFO(f"image_generation raw_req: {req.model_dump_json()}")
+        
+        # 设置请求头
+        self._headers = {
+            "Authorization": f"Bearer {ARK_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        INFO(f"T2IClient initialized with base_url: {ARK_BASE_URL}")
 
+    def image_generation(self, prompt: str, width: int = DEFAULT_WIDTH, height: int = DEFAULT_HEIGHT) -> List[str]:
+        """
+        使用方舟图像生成API生成图像
+        
+        Args:
+            prompt (str): 图像生成提示词
+            width (int, optional): 图像宽度，默认1024
+            height (int, optional): 图像高度，默认576（16:9比例）
+            
+        Returns:
+            List[str]: 生成图像的URL列表
+        """
+        INFO(f"image_generation prompt: {prompt}, width: {width}, height: {height}")
+        
+        # 确保宽高比接近16:9
+        aspect_ratio = width / height
+        if abs(aspect_ratio - 16/9) > 0.1:  # 如果宽高比偏离16:9超过0.1
+            INFO(f"Warning: Aspect ratio {aspect_ratio:.2f} is not 16:9. Adjusting to default 16:9 resolution.")
+            width = DEFAULT_WIDTH
+            height = DEFAULT_HEIGHT
+        
         try:
-            raw_resp = self._visual_service.cv_process(req.model_dump())
+            # 构建API请求URL
+            api_url = f"{ARK_BASE_URL.rstrip('/')}/images/generations"
+            
+            # 构建请求数据
+            payload = {
+                "model": TEXT_TO_IMAGE_MODEL,
+                "prompt": prompt,
+                "size": f"{width}x{height}",
+                "watermark": False, #是否在生成的图片中添加水印
+                "n": 1,  # 生成1张图片
+                "quality": "hd"  # 尝试请求高质量图像
+            }
+            
+            INFO(f"Sending request to {api_url} with dimensions {width}x{height}")
+            
+            # 发送HTTP请求
+            response = requests.post(
+                api_url,
+                headers=self._headers,
+                json=payload
+            )
+            
+            # 解析响应
+            if response.status_code != 200:
+                error_message = f"API request failed with status code {response.status_code}"
+                try:
+                    error_data = response.json()
+                    if "error" in error_data:
+                        error_message = f"{error_message}: {error_data['error'].get('message', 'Unknown error')}"
+                except:
+                    pass
+                raise T2IException(response.status_code, error_message)
+            
+            # 解析成功响应
+            response_data = response.json()
+            INFO(f"Response received: {json.dumps(response_data)[:200]}...")
+            
+            # 获取生成的图像URL
+            if "data" in response_data and len(response_data["data"]) > 0:
+                image_urls = [item.get("url") for item in response_data["data"] if "url" in item]
+                INFO(f"Generated image urls: {image_urls}")
+                return image_urls
+            else:
+                raise T2IException(500, "No image data returned from API")
+            
+        except requests.RequestException as e:
+            ERROR(f"Request failed: {str(e)}")
+            raise T2IException(500, f"Failed to generate image: {str(e)}")
         except Exception as e:
-            try:
-                # when error occurs, the response is a text containing a json string with other strange characters
-                # before and after the json text. So we need to explicitly look for curly braces
-                # to correctly parse the json text.
-                error_resp = str(e.args[0])
-                start_index = error_resp.find("{")
-                end_index = len(error_resp) - "".join(reversed(error_resp)).find("}")
-                if start_index == -1 or end_index == -1:
-                    raise ValueError("no json object found in the string")
-                raw_resp_text = error_resp[start_index:end_index]
-                raw_resp = json.loads(raw_resp_text)
-            except JSONDecodeError or ValueError as e:
-                ERROR(f"failed to load raw resp from exception args, e.args: {e.args}")
+            ERROR(f"Failed to generate image: {str(e)}")
+            if isinstance(e, T2IException):
                 raise e
-
-        INFO(f"image_generation raw_resp: {raw_resp}")
-
-        if raw_resp.get("code") != 10000:
-            raise T2IException(raw_resp.get("code"), raw_resp.get("message"))
-
-        resp = T2ICreateTextToImageResponse.model_validate(raw_resp.get("data"))
-
-        return [image_url for image_url in resp.image_urls]
+            else:
+                raise T2IException(500, f"Failed to generate image: {str(e)}")
 
 
+# 为了保持兼容性，保留原有的请求和响应类
 class LogoInfo(BaseModel):
     add_logo: Optional[bool] = None
     position: Optional[int] = None
