@@ -47,6 +47,8 @@ def build_mcp_clients_from_config(  # type: ignore
         env = mcp_servers_config[server_name].get("env", None)
         server_url = mcp_servers_config[server_name].get("url", None)
         port = mcp_servers_config[server_name].get("port", None)
+        headers = mcp_servers_config[server_name].get("headers", None)
+        transport = mcp_servers_config[server_name].get("type", None)
         if port is not None:
             logger.info("Starting local SSE MCP server")
             client = MCPClient(
@@ -60,9 +62,12 @@ def build_mcp_clients_from_config(  # type: ignore
             client = MCPClient(
                 name=server_name,
                 server_url=server_url,
+                exit_stack=exit_stack,
                 command=command,
                 arguments=args,
                 env=env,
+                headers=headers,
+                transport=transport,
                 **kwargs,
             )
         mcp_clients[server_name] = client

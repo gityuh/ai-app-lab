@@ -15,6 +15,7 @@
 from arkitect.core.component.tool.mcp_client import MCPClient
 from arkitect.core.component.tool.tool_pool import ToolPool
 from dummy_mcp_server import server
+from dummy_mcp_server_http_streamable import server as http_streamable_server
 
 
 async def check_server_working(
@@ -34,3 +35,8 @@ async def check_server_working(
 def _start_server():
     """Function to run the server (executed in a separate process)."""
     server.run(transport="sse")
+
+
+def _start_http_streamable_server():
+    """Function to run the http streamable server (executed in a separate process)."""
+    http_streamable_server.run(transport="streamable-http")
