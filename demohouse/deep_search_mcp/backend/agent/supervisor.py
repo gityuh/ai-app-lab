@@ -111,6 +111,14 @@ class Supervisor(Agent):
             async for chunk in self._make_planning(global_state):
                 yield chunk
 
+            if planning.is_denied:
+                yield PlanningEvent(
+                    action="denied",
+                    planning=planning,
+                    usage=self._to_completion_usage(global_state),
+                )
+                return
+
             yield PlanningEvent(
                 action="made",
                 planning=planning,
@@ -197,6 +205,7 @@ class Supervisor(Agent):
             ],
         )
 
+        buffer_response = ''
         async for chunk in rsp_stream:
             self.record_usage(chunk, global_state.custom_state.total_usage)
             # we ignore the tool chunks
@@ -212,6 +221,8 @@ class Supervisor(Agent):
                 and chunk.choices[0].delta.reasoning_content
             ):
                 yield ReasoningEvent(delta=chunk.choices[0].delta.reasoning_content)
+        if "<|NEED_MORE_INFO|>" in buffer_response:
+            planning.is_denied = True
 
     @task(trace_all=False)
     async def _update_planning(
