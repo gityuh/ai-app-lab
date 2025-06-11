@@ -55,6 +55,7 @@ Planning is the model for agent planning_use
 class Planning(BaseModel):
     root_task: str = ""
     items: List[PlanningItem] = []
+    is_denied: bool = False
 
     # return all items
     def list_items(self) -> List[PlanningItem]:
