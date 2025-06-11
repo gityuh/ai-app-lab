@@ -154,7 +154,10 @@ DeepSearch 是一款专为处理复杂问题而精心设计的高效工具，可
 ├── supervisord.d # 各个mcp server对应的supervisord配置
 │   ├── link-search-mcp.conf
 │   ├── tls-mcp.conf
-│   └── vdb-mcp.conf
+│   ├── vdb-mcp.conf
+│   ├── sandbox-mcp.conf
+│   ├── browser-use-mcp.conf
+│   └── ppt-mcp.conf
 ├── tools
 │   ├── __init__.py
 │   ├── hooks.py
