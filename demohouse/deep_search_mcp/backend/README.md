@@ -11,6 +11,7 @@ DeepSearch 是一款专为处理复杂问题而精心设计的高效工具，可
 ## 费用说明
 
 - **推理总结模型计费**
+  - [Doubao-Seed-1.6-thinking](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=doubao-seed-1-6&projectName=default)大模型：开通赠送500,000 tokens [免费额度](https://www.volcengine.com/docs/82379/1399514)，超过部分按 token 使用量付费，详见 [计费说明](https://www.volcengine.com/docs/82379/1544106)
   - [Doubao-1.5-thinking-pro](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=doubao-1-5-thinking-pro&projectName=default)大模型：开通赠送500,000 tokens [免费额度](https://www.volcengine.com/docs/82379/1399514)，超过部分按 token 使用量付费，详见 [计费说明](https://www.volcengine.com/docs/82379/1099320#%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B)。
   - [DeepSeek-R1 大模型](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=deepseek-r1)：开通赠送500,000 tokens [免费额度](https://www.volcengine.com/docs/82379/1399514)，超过部分按 token 使用量付费，详见 [计费说明](https://www.volcengine.com/docs/82379/1099320#%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B)。
 - **联网搜索服务计费**
