@@ -12,17 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import Client, ClientPool, get_client_pool
-from .http import default_ark_client, load_request
-from .redis import RedisClient
-from .sse import AsyncSSEDecoder
+from typing import List
 
-__all__ = [
-    "Client",
-    "ClientPool",
-    "AsyncSSEDecoder",
-    "default_ark_client",
-    "load_request",
-    "get_client_pool",
-    "RedisClient",
-]
+from pydantic import BaseModel, Field
+
+from arkitect.types.responses.event import StateUpdateEvent
+
+
+class State(BaseModel):
+    details: dict = {}
+    events: List[StateUpdateEvent] = Field(default_factory=list)

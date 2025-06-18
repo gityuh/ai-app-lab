@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "calculator": {
+    "YourMCPServer": {
       "url": "http://localhost:8765/sse"
     }
   }
