@@ -39,7 +39,6 @@ log/
 logs/
 tmp/
 .venv
-.env
 coverage.out
 coverage.out.tmp
 bin
