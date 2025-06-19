@@ -2,7 +2,7 @@
 
 ## 应用介绍
 
-本应用是一款专为处理复杂问题而精心设计的高效工具，可集成联网搜索、知识库、网页解析、日志服务等丰富的 MCP 服务。无论是学术研究、企业决策，还是产品调研场景，它都能助力用户深入挖掘信息，提出切实可行的解决策略。
+DeepSearch 是一款专为处理复杂问题而精心设计的高效工具，可集成浏览器使用、联网搜索、知识库、网页解析、ChatPPT、Python 代码执行器等丰富的 MCP 服务。无论是学术研究、企业决策，还是产品调研场景，它都能助力用户深入挖掘信息，提出切实可行的解决策略。
 
 **架构图**
 
@@ -11,6 +11,7 @@
 ## 费用说明
 
 - **推理总结模型计费**
+  - [Doubao-Seed-1.6](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=doubao-seed-1-6&projectName=default)大模型：开通赠送500,000 tokens [免费额度](https://www.volcengine.com/docs/82379/1399514)，超过部分按 token 使用量付费，详见 [计费说明](https://www.volcengine.com/docs/82379/1544106)
   - [Doubao-1.5-thinking-pro](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=doubao-1-5-thinking-pro&projectName=default)大模型：开通赠送500,000 tokens [免费额度](https://www.volcengine.com/docs/82379/1399514)，超过部分按 token 使用量付费，详见 [计费说明](https://www.volcengine.com/docs/82379/1099320#%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B)。
   - [DeepSeek-R1 大模型](https://console.volcengine.com/ark/region:ark+cn-beijing/model/detail?Id=deepseek-r1)：开通赠送500,000 tokens [免费额度](https://www.volcengine.com/docs/82379/1399514)，超过部分按 token 使用量付费，详见 [计费说明](https://www.volcengine.com/docs/82379/1099320#%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B)。
 - **联网搜索服务计费**
@@ -26,6 +27,12 @@
 - **网页解析插件**
   - 网页解析插件可获取和解析 url 链接下的标题和内容。支持用户快速提取和检索网页、pdf等内容中有价值的信息。
   - 价格详见[计费说明](https://www.volcengine.com/docs/82379/1284852)。
+- **浏览器使用（可选）**
+  - 基于开源项目 Browser-use + Serverless浏览器沙箱，提供开箱即用的 Browser Agent 部署方案，用户可在 大模型生态广场 云部署Browser-Use MCP，并集成代码使用
+  - 由 函数服务 按量计费
+- **必优-ChatPPT（可选）**
+  - 提供必优科技智能PPT服务，包括但不限于PPT创作，PPT美化，PPT生成等能力，用户可在 大模型生态广场 选用该MCP，并集成代码使用
+  - 由 必优科技 官方收费
 - **对象存储 TOS（可选）**
   - 对象存储 TOS 提供的海量、安全、低成本、易用、高可靠、高可用的分布式云存储服务。
   - 每个计费项都是单独计费，价格详见[计费说明](https://www.volcengine.com/docs/6349/78455)。
@@ -148,7 +155,10 @@
 ├── supervisord.d # 各个mcp server对应的supervisord配置
 │   ├── link-search-mcp.conf
 │   ├── tls-mcp.conf
-│   └── vdb-mcp.conf
+│   ├── vdb-mcp.conf
+│   ├── sandbox-mcp.conf
+│   ├── browser-use-mcp.conf
+│   └── ppt-mcp.conf
 ├── tools
 │   ├── __init__.py
 │   ├── hooks.py

@@ -13,7 +13,7 @@ Computer Use Agent具备卓越的桌面应用操作能力，能够精准识别�
 <video src="https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_sth/ljhwZthlaukjlkulzlp/ark/assistant/videos/250519.mp4" controls>
 </video>
 
-- 方式二：[使用火山Computer-Use体验中心快速体验](https://computer-use.console.volcengine.com/)
+- 方式二：[使用火山Computer-Use体验中心快速体验](https://console.volcengine.com/vefaas/region:vefaas+cn-beijing/market/computer)
 
 <video src="https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_sth/ljhwZthlaukjlkulzlp/ark/assistant/videos/20250415-221030.mp4" controls>
 </video>

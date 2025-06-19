@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pydantic import BaseModel
+from volcenginesdkarkruntime._models import BaseModel
 
 from arkitect.core.client.http import default_ark_client
 
@@ -34,7 +34,7 @@ async def link_reader(url_list: list[str]) -> dict:
     }
 
     response = await client.post(path="/tools/execute", body=body, cast_to=BaseModel)
-    return response
+    return response.model_dump()
 
 
 async def calculator(input: str) -> dict:
@@ -53,4 +53,4 @@ async def calculator(input: str) -> dict:
     }
 
     response = await client.post(path="/tools/execute", body=body, cast_to=BaseModel)
-    return response
+    return response.model_dump()

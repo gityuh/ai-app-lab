@@ -8,7 +8,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Dict, Literal, Optional
+from typing import List, Dict, Literal, Optional, Any
 
 from pydantic import BaseModel
 from volcenginesdkarkruntime.types.bot_chat.bot_reference import Reference
@@ -157,6 +157,42 @@ class KnowledgeBaseSearchToolCompletedEvent(ToolCompletedEvent):
     references: List[Reference] = []  # for each url
 
 
+
+"""
+for browser use
+"""
+class BrowserUseToolCallEvent(ToolCallEvent):
+    type: str = "browser_use"
+    query: str = ""
+    task_id: str = ""
+
+
+class BrowserUseToolCompletedEvent(ToolCompletedEvent):
+    type: str = "browser_use"
+    task_id: str = ""
+    pod_name: str = ""
+    url: str = ""
+    metadata: Dict[str, Any] = {}
+    result: str = ""
+
+
+
+"""
+for chatppt
+"""
+class ChatPPTToolCallEvent(ToolCallEvent):
+    type: str = "chatppt"
+    query: str = ""
+    ppt_id: str = ""
+
+
+class ChatPPTToolCompletedEvent(ToolCompletedEvent):
+    type: str = "chatppt"
+    ppt_id: str = ""
+    metadata: Dict[str, Any] = {}
+
+
+
 """
 Custom Events
 """
@@ -164,7 +200,7 @@ Custom Events
 
 class PlanningEvent(BaseEvent):
     type: str = 'planning'
-    action: Literal['made', 'load', 'update', 'done']
+    action: Literal['made', 'load', 'update', 'done', 'denied']
     planning: Planning
     usage: Optional[CompletionUsage] = None
 

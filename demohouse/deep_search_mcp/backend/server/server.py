@@ -157,6 +157,27 @@ def get_workers(
         post_tool_call_hook=KnowledgeBasePostToolCallHook(global_state=global_state),
     )
 
+    ppt_generator = Worker(
+        llm_model=WORKER_LLM_MODEL,
+        name="ppt_generator",
+        instruction="PPT编辑单元。提供了基于自然语言表述，创建、预览、和编辑PPT的能力，其中，预览和编辑均以独立链接的方式实现。当用户希望执行ppt相关操作时，使用此单元。只有在query_ppt返回的status为2时，才能进行下一步editor_ppt和download_ppt操作，否则轮训query_ppt获取当前状态。",
+        tools=[mcp_clients.get("ppt")]
+    )
+
+    browser_user = Worker(
+        llm_model=WORKER_LLM_MODEL,
+        name="browser_user",
+        instruction="""浏览器控制单元，提供了基于自然语言表述，完成指定浏览器任务的能力。当用户希望完成与某第三方（web）应用交互、或是执行其他基于web的操作时，使用此单元。使用该单元时需要注意：
+    1. 当分配给该单元的任务发送邮件相关时，请按照以下格式创建浏览器任务：
+    登录xxx邮箱，发送邮件。
+    收件人：yyy@zzz.com
+    主题：[主题]
+    正文：[正文]
+
+    2. 当分配给该单元的任务需要获取前面任务的总结或结果时，你需要将完整的结果（比如某个任务生成的完整报告，某个任务生产的完整链接）加入到创建浏览器任务的文本中。""",
+        tools=[mcp_clients.get("browser")]
+    )
+
     if global_state.custom_state.enabled_mcp_servers:
         # add dynamic mask
         if (
@@ -170,6 +191,10 @@ def get_workers(
             workers.update({"log_retriever": log_retriever})
         if "knowledgebase" in global_state.custom_state.enabled_mcp_servers:
             workers.update({"knowledgebase_retriever": knowledgebase_retriever})
+        if "browser_use" in global_state.custom_state.enabled_mcp_servers:
+            workers.update({"browser_user": browser_user})
+        if "chatppt" in global_state.custom_state.enabled_mcp_servers:
+            workers.update({"ppt_generator": ppt_generator})
 
         return workers
     else:

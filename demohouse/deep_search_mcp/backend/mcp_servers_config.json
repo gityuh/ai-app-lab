@@ -8,6 +8,12 @@
     },
     "knowledgebase": {
       "url": "http://localhost:7004/sse"
+    },
+    "browser": {
+      "url": "http://localhost:7005/sse"
+    },
+    "ppt": {
+      "url": "http://localhost:7006/sse"
     }
   }
 }

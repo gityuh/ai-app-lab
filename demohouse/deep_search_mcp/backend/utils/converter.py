@@ -21,7 +21,8 @@ from arkitect.utils.context import get_reqid
 from models.events import BaseEvent, FunctionCallEvent, FunctionCompletedEvent, WebSearchToolCallEvent, \
     WebSearchToolCompletedEvent, PythonExecutorToolCompletedEvent, PythonExecutorToolCallEvent, \
     LinkReaderToolCompletedEvent, LinkReaderToolCallEvent, OutputTextEvent, ReasoningEvent, PlanningEvent, ErrorEvent, \
-    EOFEvent, KnowledgeBaseSearchToolCompletedEvent, KnowledgeBaseSearchToolCallEvent
+    EOFEvent, KnowledgeBaseSearchToolCompletedEvent, KnowledgeBaseSearchToolCallEvent, BrowserUseToolCallEvent, \
+    ChatPPTToolCallEvent, BrowserUseToolCompletedEvent, ChatPPTToolCompletedEvent
 
 
 def convert_pre_tool_call_to_event(
@@ -47,6 +48,37 @@ def convert_pre_tool_call_to_event(
             limit=args.get('limit', 3),
             collection_name=args.get('collection_name', ''),
         )
+    elif function_name == 'create_browser_use_task':
+        return BrowserUseToolCallEvent(
+            query=json.loads(function_parameter).get('task', ''),
+            function_name=function_name,
+        )
+    elif function_name == 'get_browser_use_task_result':
+        return BrowserUseToolCallEvent(
+            task_id=json.loads(function_parameter).get('task_id', ''),
+            function_name=function_name,
+        )
+    elif function_name == 'build_ppt':
+        return ChatPPTToolCallEvent(
+            query=json.loads(function_parameter).get('text', ''),
+            function_name=function_name,
+        )
+    elif function_name == 'query_ppt':
+        return ChatPPTToolCallEvent(
+            ppt_id=json.loads(function_parameter).get('ppt_id', ''),
+            function_name=function_name,
+        )
+    elif function_name == 'editor_ppt':
+        return ChatPPTToolCallEvent(
+            ppt_id=json.loads(function_parameter).get('ppt_id', ''),
+            function_name=function_name,
+        )
+    elif function_name == 'download_ppt':
+        return ChatPPTToolCallEvent(
+            ppt_id=json.loads(function_parameter).get('ppt_id', ''),
+            function_name=function_name,
+        )
+
 
     # TODO inner tool wrapper
     return FunctionCallEvent(
@@ -76,6 +108,30 @@ def convert_post_tool_call_to_event(
     elif function_name == 'search_knowledge':
         return convert_knowledge_base_result_to_event(
             function_parameter, function_result
+        )
+    elif function_name == 'create_browser_use_task':
+        return convert_browser_use_base_result_to_event(
+            function_name, function_parameter, function_result
+        )
+    elif function_name == 'get_browser_use_task_result':
+        return convert_browser_use_base_result_to_event(
+            function_name, function_parameter, function_result
+        )
+    elif function_name == 'build_ppt':
+        return convert_chatppt_base_result_to_event(
+            function_name, function_parameter, function_result
+        )
+    elif function_name == 'query_ppt':
+        return convert_chatppt_base_result_to_event(
+            function_name, function_parameter, function_result
+        )
+    elif function_name == 'editor_ppt':
+        return convert_chatppt_base_result_to_event(
+            function_name, function_parameter, function_result
+        )
+    elif function_name == 'download_ppt':
+        return convert_chatppt_base_result_to_event(
+            function_name, function_parameter, function_result
         )
 
     # TODO inner tool wrapper
@@ -166,6 +222,89 @@ def convert_knowledge_base_result_to_event(raw_args: str, raw_response: str) -> 
             success=False,
             error_msg=str(e)
         )
+
+def convert_browser_use_base_result_to_event(function_name: str, raw_args: str, raw_response: str) -> BrowserUseToolCompletedEvent:
+    try:
+        args = json.loads(raw_args)
+        if raw_response.startswith('data:'):
+            result = json.loads(raw_response.removeprefix('data: '))
+            task_id = result.get('task_id', '')
+            result_data = json.loads(result.get('data', '').removeprefix('data: '))
+            status = result_data.get('status', '')
+            choices = result_data.get('choices', [])
+            delta = choices[0].get('delta', {})
+            content = delta.get('content', '')
+
+            result = ""
+            if isinstance(content, str):
+                result = content
+            elif isinstance(content, List):
+                result = json.dumps(content)
+
+
+            return BrowserUseToolCompletedEvent(
+                status=status,
+                task_id=task_id,
+                result=result,
+                function_name=function_name,
+            )
+
+        else:
+            # call tool error
+            if "Error" in raw_response:
+                return BrowserUseToolCompletedEvent(
+                    success=False,
+                    result=raw_response,
+                    function_name=function_name,
+                )
+
+            # result of create_browser_use_task
+            result = json.loads(raw_response)
+            task_id = result.get("task_id", "")
+            pod_name = result.get("pod_name", "")
+            return BrowserUseToolCompletedEvent(
+                task_id=task_id,
+                pod_name=pod_name,
+                function_name=function_name,
+            )
+
+    except Exception as e:
+        return BrowserUseToolCompletedEvent(
+            success=False,
+            error_msg=str(e),
+            function_name=function_name,
+        )
+
+
+def convert_chatppt_base_result_to_event(function_name: str, raw_args: str, raw_response: str) -> ChatPPTToolCompletedEvent:
+    try:
+        ppt_id = json.loads(raw_args).get('ppt_id', '')
+        result = json.loads(raw_response)
+        code = result.get('code', 500)
+        msg = result.get('msg', '')
+        metadata = result.get('data', {})
+        metadata_id = metadata.get('id', '')
+
+        if code != 200:
+            return ChatPPTToolCompletedEvent(
+                success=False,
+                error_msg=msg,
+                function_name=function_name,
+            )
+
+        return ChatPPTToolCompletedEvent(
+            ppt_id=ppt_id if ppt_id else metadata_id,
+            metadata=metadata,
+            function_name=function_name,
+        )
+
+    except Exception as e:
+        return ChatPPTToolCompletedEvent(
+            success=False,
+            error_msg=str(e),
+            function_name=function_name,
+        )
+
 
 
 def convert_references_to_format_str(refs: List[Reference]) -> str:
