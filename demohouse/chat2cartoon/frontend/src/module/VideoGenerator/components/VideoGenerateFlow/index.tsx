@@ -53,6 +53,11 @@ import FlowItemTitle from '../FlowItemTitle';
 import LoadingFilm from '../LoadingFilm';
 import useFlowPhaseData from './useFlowPhaseData';
 import ContinueButton from '../ContinueButton';
+import { Breadcrumb, Button, Space } from '@arco-design/web-react';
+import { IconLeft, IconRight, IconRefresh } from '@arco-design/web-react/icon';
+import dayjs from 'dayjs';
+import Axios from 'axios';
+import { Message } from '@arco-design/web-react';
 
 interface Props {
   messages: ComplexMessage;
@@ -122,7 +127,117 @@ const VideoGenerateFlow = (props: Props) => {
 
   const finalFilmPlayerRef = useRef<IVideoPlayerRef>(null);
 
+  const [uploadedImages, setUploadedImages] = useState<Record<number, string>>({});
+  const [imagesRestored, setImagesRestored] = useState(false);
+
   useEffect(() => {
+    // 如果已经恢复过图片，不再重复执行
+    if (imagesRestored) {
+      return;
+    }
+    
+    // 页面加载时从localStorage恢复已上传的图片
+    try {
+      // 从统一存储中恢复
+      const storedImagesJson = localStorage.getItem('allUploadedImages');
+      console.log('尝试从localStorage恢复图片', storedImagesJson ? '找到数据' : '未找到数据');
+      
+      if (storedImagesJson) {
+        const recoveredImages = JSON.parse(storedImagesJson) as Record<number, string>;
+        
+        if (Object.keys(recoveredImages).length > 0) {
+          console.log('恢复的图片数量:', Object.keys(recoveredImages).length);
+          
+          // 先设置uploadedImages状态
+          setUploadedImages(recoveredImages);
+          // 标记已恢复，避免重复执行
+          setImagesRestored(true);
+          
+          // 延迟执行UI更新，确保组件已完全挂载
+          setTimeout(() => {
+            // 恢复图片到相应的显示区域
+            Object.entries(recoveredImages).forEach(([indexStr, dataUrl]) => {
+              const index = parseInt(indexStr, 10);
+              console.log(`正在恢复索引 ${index} 的图片`);
+              
+              // 恢复到第一帧图像
+              if (userConfirmData?.[UserConfirmationDataKey.FirstFrameImages]) {
+                const firstFrameImages = cloneDeep(userConfirmData[UserConfirmationDataKey.FirstFrameImages]);
+                const firstFrameImageIndex = firstFrameImages.findIndex(item => item.index === index);
+                
+                if (firstFrameImageIndex !== -1) {
+                  console.log(`将图片设置到第一帧图像 index=${index}`);
+                  firstFrameImages[firstFrameImageIndex].images = [dataUrl];
+                  
+                  updateConfirmationMessage({
+                    [UserConfirmationDataKey.FirstFrameImages]: firstFrameImages,
+                  });
+                }
+              }
+              
+              // 更新视频背景图片
+              console.log(`更新视频背景图片 index=${index}`);
+              updateVideoBackgroundImages(val => {
+                return { ...val, [index]: [dataUrl] };
+              });
+              
+              // 更新音频背景图片
+              console.log(`更新音频背景图片 index=${index}`);
+              updateAudioBackgroundImages(val => {
+                return { ...val, [index]: [dataUrl] };
+              });
+              
+              // 更新缩略图数据
+              if (generateStoryBoardImageData[index]) {
+                console.log(`更新缩略图数据 index=${index}`);
+                const mediaData = generateStoryBoardImageData[index];
+                const currentMediaUrls = mediaData.mediaUrls || [];
+                
+                if (currentMediaUrls.length === 0) {
+                  generateStoryBoardImageData[index].mediaUrls = [dataUrl];
+                } else if (!currentMediaUrls.includes(dataUrl)) {
+                  generateStoryBoardImageData[index].mediaUrls = [
+                    dataUrl,
+                    ...currentMediaUrls
+                  ];
+                }
+              }
+            });
+            
+            // 强制触发UI更新
+            console.log('强制UI更新');
+            setVideoStatus(prev => prev + 1);
+          }, 1000);
+        }
+      }
+    } catch (error) {
+      console.error('从本地存储恢复图片失败:', error);
+    }
+  }, [userConfirmData, generateStoryBoardImageData, imagesRestored]);
+
+  // 监听页面可见性变化，页面重新变为可见时尝试恢复图片
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !imagesRestored) {
+        // 页面变为可见时，重新设置imagesRestored为false以触发恢复逻辑
+        setImagesRestored(false);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [imagesRestored]);
+
+  // 修复页面滚动逻辑，添加保护机制避免过度滚动
+  useEffect(() => {
+    // 防止在数据加载阶段或恢复图片时触发滚动
+    if (document.readyState !== 'complete') {
+      return;
+    }
+    
     const phaseArr = [
       '',
       FlowPhase.GenerateRole,
@@ -134,8 +249,47 @@ const VideoGenerateFlow = (props: Props) => {
     ];
     const phase = phaseArr[currentPhaseIndex];
     const element = document.getElementById(phase);
-    element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // 添加判断，只有在元素存在且用户没有手动滚动时才执行自动滚动
+    if (element) {
+      // 使用更温和的滚动选项，允许用户中断
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }, [currentPhaseIndex]);
+
+  // 添加一个新的函数用于同步上传的图片到缩略图显示
+  const syncUploadedImagesToThumbnails = () => {
+    // 遍历所有上传的图片
+    Object.entries(uploadedImages).forEach(([indexStr, dataUrl]) => {
+      const index = parseInt(indexStr, 10);
+      
+      // 确保分镜画面数据中包含这些图片作为缩略图选项
+      if (generateStoryBoardImageData[index]) {
+        // 检查图片是否已经在mediaUrls中
+        const exists = generateStoryBoardImageData[index].mediaUrls?.includes(dataUrl);
+        
+        if (!exists) {
+          // 如果不存在，添加到mediaUrls数组的开头
+          generateStoryBoardImageData[index].mediaUrls = [
+            dataUrl,
+            ...(generateStoryBoardImageData[index].mediaUrls || [])
+          ];
+        }
+      }
+    });
+  };
+
+  // 每当上传的图片变化时，同步到缩略图，但添加节流以避免过度渲染
+  useEffect(() => {
+    if (Object.keys(uploadedImages).length > 0) {
+      // 使用setTimeout来避免频繁更新
+      const timeoutId = setTimeout(() => {
+        syncUploadedImagesToThumbnails();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [uploadedImages]);
 
   const modelOperateDisabled = autoNext || runningPhaseStatus === RunningPhaseStatus.Pending;
 
@@ -287,6 +441,105 @@ const VideoGenerateFlow = (props: Props) => {
     );
   };
 
+  const handleImageUpload = async (file: File, index: number) => {
+    try {
+      // 创建一个临时URL用于预览
+      const reader = new FileReader();
+      
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        const dataUrl = e.target?.result as string;
+        
+        // 立即更新上传图片状态，确保UI立即显示上传的图片
+        setUploadedImages(prev => ({
+          ...prev,
+          [index]: dataUrl
+        }));
+        
+        // 将图片数据保存到localStorage中，确保刷新页面后仍能显示
+        try {
+          // 保存所有已上传图片，作为单个JSON对象存储，避免分散存储引起的问题
+          const allImages = { ...uploadedImages, [index]: dataUrl };
+          localStorage.setItem('allUploadedImages', JSON.stringify(allImages));
+          localStorage.setItem('lastUploadTimestamp', String(Date.now()));
+          
+          console.log('图片已保存到localStorage', Object.keys(allImages).length);
+        } catch (storageError) {
+          console.error('无法保存图片到本地存储:', storageError);
+        }
+        
+        // 更新到第一帧图像中
+        if (userConfirmData?.[UserConfirmationDataKey.FirstFrameImages]) {
+          const firstFrameImages = cloneDeep(userConfirmData[UserConfirmationDataKey.FirstFrameImages]);
+          const firstFrameImageIndex = firstFrameImages.findIndex(item => item.index === index);
+          
+          if (firstFrameImageIndex !== -1) {
+            // 使用dataUrl替代实际URL
+            firstFrameImages[firstFrameImageIndex].images = [dataUrl];
+            
+            // 更新状态，确保其他组件可以使用上传的图片
+            updateConfirmationMessage({
+              [UserConfirmationDataKey.FirstFrameImages]: firstFrameImages,
+            });
+            
+            // 同时更新视频和音频背景图片
+            updateVideoBackgroundImages(val => ({
+              ...val,
+              [index]: [dataUrl],
+            }));
+            
+            updateAudioBackgroundImages(val => ({
+              ...val,
+              [index]: [dataUrl],
+            }));
+          }
+        }
+        
+        // 直接更新缩略图数据，确保立即显示
+        if (generateStoryBoardImageData[index]) {
+          // 如果该索引存在图片数据，将上传的图片添加到数组首位
+          const mediaData = generateStoryBoardImageData[index];
+          const currentMediaUrls = mediaData.mediaUrls || [];
+          
+          if (currentMediaUrls.length === 0) {
+            // 如果不存在或为空数组，直接设置新数组
+            generateStoryBoardImageData[index].mediaUrls = [dataUrl];
+          } else if (!currentMediaUrls.includes(dataUrl)) {
+            // 如果已存在但不包含当前图片，添加到首位
+            generateStoryBoardImageData[index].mediaUrls = [
+              dataUrl,
+              ...currentMediaUrls
+            ];
+          }
+          // 强制更新UI
+          setVideoStatus(prev => prev + 1);
+        }
+        
+        // 通知用户上传成功
+        Message.success('图片上传成功');
+      };
+      
+      reader.onerror = () => {
+        Message.error('图片读取失败，请重试');
+      };
+      
+      // 读取文件为DataURL
+      reader.readAsDataURL(file);
+      
+    } catch (error) {
+      console.error('上传图片失败:', error);
+      Message.error('图片上传失败，请重试');
+    }
+  };
+
+  // 在VideoGenerateFlow组件内添加重置上传状态的函数
+  const resetUploadedImages = () => {
+    console.log('重置已上传图片状态');
+    setUploadedImages({});
+    localStorage.removeItem('allUploadedImages');
+    localStorage.removeItem('lastUploadTimestamp');
+    Message.success('已重置上传状态');
+  };
+
   const flowList: FlowItem[] = [
     {
       id: FlowPhase.GenerateRole,
@@ -404,6 +657,7 @@ const VideoGenerateFlow = (props: Props) => {
                       <MediaCard
                         key={`${FlowPhase.GenerateRole}${index}`}
                         src={
+                          uploadedImages[index] || 
                           (!isUndefined(firstFrameImageIndex) &&
                             firstFrameImages?.[firstFrameImageIndex]?.images?.[0]) ||
                           ''
@@ -431,6 +685,12 @@ const VideoGenerateFlow = (props: Props) => {
                               updateConfirmationMessage({
                                 [UserConfirmationDataKey.FirstFrameImages]: cloneArr,
                               });
+                              // 清除该索引的上传图片记录
+                              if (uploadedImages[index]) {
+                                const newUploadedImages = { ...uploadedImages };
+                                delete newUploadedImages[index];
+                                setUploadedImages(newUploadedImages);
+                              }
                             }}
                           />
                         }
@@ -483,6 +743,12 @@ const VideoGenerateFlow = (props: Props) => {
                           if (generateStoryBoardVideoData.length > 0) {
                             setVideoRegenerateState(val => val | (1 << index));
                           }
+                          // 清除该索引的上传图片记录
+                          if (uploadedImages[index]) {
+                            const newUploadedImages = { ...uploadedImages };
+                            delete newUploadedImages[index];
+                            setUploadedImages(newUploadedImages);
+                          }
                         }}
                         promptLoading={runningPhaseStatus === RunningPhaseStatus.Pending}
                         onPromptGenerate={() => {
@@ -511,6 +777,15 @@ const VideoGenerateFlow = (props: Props) => {
                           );
                           setFirstFrameDescriptionRegenerateState(val => val & ~(1 << index));
                           setFirstFrameRegenerateState(val => val | (1 << index));
+                          // 清除该索引的上传图片记录
+                          if (uploadedImages[index]) {
+                            const newUploadedImages = { ...uploadedImages };
+                            delete newUploadedImages[index];
+                            setUploadedImages(newUploadedImages);
+                          }
+                        }}
+                        onImageUpload={(file) => {
+                          handleImageUpload(file, index);
                         }}
                       />
                     );
@@ -546,13 +821,14 @@ const VideoGenerateFlow = (props: Props) => {
                     const videoIndex = videos?.findIndex(item => item.index === index);
                     const firstImageIndex = firstFrameImages?.findIndex(item => item.index === index);
 
-                    if (!isUndefined(firstImageIndex) && firstFrameImages?.[firstImageIndex]?.images?.[0]) {
+                    if (!isUndefined(firstImageIndex) && 
+                        (firstFrameImages?.[firstImageIndex]?.images?.[0] || uploadedImages[index])) {
                       if (!(index in videoBackgroundImages)) {
                         updateVideoBackgroundImages(val => ({
                           ...val,
-                          [index]: [firstFrameImages?.[firstImageIndex]?.images?.[0]],
+                          [index]: [uploadedImages[index] || firstFrameImages?.[firstImageIndex]?.images?.[0]],
                         }));
-                        videoBackgroundImages[index] = [firstFrameImages?.[firstImageIndex]?.images?.[0]];
+                        videoBackgroundImages[index] = [uploadedImages[index] || firstFrameImages?.[firstImageIndex]?.images?.[0]];
                       }
                     }
 
@@ -711,13 +987,14 @@ const VideoGenerateFlow = (props: Props) => {
                     const audioIndex = audios?.findIndex(item => item.index === index);
                     const firstImageIndex = firstFrameImages?.findIndex(item => item.index === index);
 
-                    if (!isUndefined(firstImageIndex) && firstFrameImages?.[firstImageIndex]?.images?.[0]) {
+                    if (!isUndefined(firstImageIndex) && 
+                        (firstFrameImages?.[firstImageIndex]?.images?.[0] || uploadedImages[index])) {
                       if (!(index in audioBackgroundImages)) {
                         updateAudioBackgroundImages(val => ({
                           ...val,
-                          [index]: [firstFrameImages?.[firstImageIndex]?.images?.[0]],
+                          [index]: [uploadedImages[index] || firstFrameImages?.[firstImageIndex]?.images?.[0]],
                         }));
-                        audioBackgroundImages[index] = [firstFrameImages?.[firstImageIndex]?.images?.[0]];
+                        audioBackgroundImages[index] = [uploadedImages[index] || firstFrameImages?.[firstImageIndex]?.images?.[0]];
                       }
                     }
 
@@ -751,7 +1028,7 @@ const VideoGenerateFlow = (props: Props) => {
                             }}
                           />
                         }
-                        audioImg={generateStoryBoardImageData[index]?.mediaUrls?.[0]}
+                        audioImg={uploadedImages[index] || generateStoryBoardImageData[index]?.mediaUrls?.[0]}
                         type="audio"
                         modelInfo={item.modelDisplayInfo}
                         onRegenerate={() => {
@@ -772,7 +1049,7 @@ const VideoGenerateFlow = (props: Props) => {
                           updateAudioBackgroundImages(val => {
                             const cloneArr = cloneDeep(val);
                             cloneArr[index].push(
-                              isUndefined(firstImageIndex) ? '' : firstFrameImages?.[firstImageIndex]?.images?.[0],
+                              uploadedImages[index] || (isUndefined(firstImageIndex) ? '' : firstFrameImages?.[firstImageIndex]?.images?.[0]),
                             );
                             return cloneArr;
                           });
@@ -945,6 +1222,14 @@ const VideoGenerateFlow = (props: Props) => {
             onClick={handleContinueClick}
             loading={runningPhaseStatus === RunningPhaseStatus.Pending}
           />
+          <Button 
+            type="text" 
+            style={{ marginTop: '8px' }}
+            onClick={resetUploadedImages}
+          >
+            <IconRefresh />
+            重置上传状态
+          </Button>
         </div>
       );
     }

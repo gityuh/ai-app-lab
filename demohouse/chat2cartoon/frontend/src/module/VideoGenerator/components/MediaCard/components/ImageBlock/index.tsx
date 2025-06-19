@@ -34,7 +34,7 @@ const ImageBlock = ({ imgUrl, imgText }: ImageBlockProps) => {
         </div>
       );
     }
-    if (imgUrl && !imgUrl?.startsWith('http')) {
+    if (imgUrl && !imgUrl?.startsWith('http') && !imgUrl?.startsWith('blob:') && !imgUrl?.startsWith('data:')) {
       return (
         <div className={styles.imgRisk}>
           <img src={iconImageFailed} style={{ width: 76, height: 76 }} />
@@ -49,6 +49,7 @@ const ImageBlock = ({ imgUrl, imgText }: ImageBlockProps) => {
           onError={e => {
             e.currentTarget.src = iconImageFailed;
           }}
+          style={{ objectFit: 'contain', width: '100%', height: '100%' }}
         />
       );
     }

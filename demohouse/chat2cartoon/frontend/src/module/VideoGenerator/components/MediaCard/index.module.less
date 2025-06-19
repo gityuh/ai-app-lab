@@ -19,13 +19,62 @@
   border-radius: 10px;
 }
 
-.image-wrapper{
+.imageWrapper{
   width: 100%;
   height: 100%;
   position: relative;
   padding: 10px;
 }
 
+.uploadOverlay {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: auto;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 10;
+}
+
+.imageWrapper:hover .uploadOverlay {
+  opacity: 1;
+}
+
+.uploadButton {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background-color: rgba(59, 145, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  
+  &:hover {
+    background-color: rgba(59, 145, 255, 1);
+  }
+  
+  span {
+    margin-left: 4px;
+    font-size: 12px;
+  }
+}
+
 .warning-border {
   border: 1px solid var(--oranged-oranged-4, #FF832B);
+}
+
+.disabledUpload {
+  opacity: 0.5;
+  cursor: not-allowed;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+  }
 }

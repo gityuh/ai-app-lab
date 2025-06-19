@@ -11,7 +11,8 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 
-import { ButtonProps } from '@arco-design/web-react';
+import { ButtonProps, Upload, Message } from '@arco-design/web-react';
+import { IconUpload } from '@arco-design/web-react/icon';
 import { after } from 'lodash';
 import cx from 'classnames';
 
@@ -45,6 +46,8 @@ interface Props {
   afterLoad?: () => void;
   editWarning?: boolean;
   regenerateWarning?: boolean;
+  onImageUpload?: (file: File) => void;
+  uploadLimitReached?: boolean;
 }
 
 const MediaCard = (props: Props) => {
@@ -68,6 +71,8 @@ const MediaCard = (props: Props) => {
     regenerateWarning,
     disabled,
     afterLoad,
+    onImageUpload,
+    uploadLimitReached,
   } = props;
 
   const [visible, setVisible] = useState(false);
@@ -128,6 +133,37 @@ const MediaCard = (props: Props) => {
         ) : (
           <div className={styles.imageWrapper}>
             <ImageBlock imgUrl={src} />
+            {onImageUpload && (
+              <div className={styles.uploadOverlay}>
+                <Upload
+                  accept="image/*"
+                  showUploadList={false}
+                  customRequest={(option) => {
+                    if (option.file) {
+                      const file = option.file as File;
+                      // 检查文件类型
+                      if (!file.type.startsWith('image/')) {
+                        Message.error('请上传图片文件');
+                        return;
+                      }
+                      // 检查文件大小，限制为10MB
+                      if (file.size > 10 * 1024 * 1024) {
+                        Message.error('图片大小不能超过10MB');
+                        return;
+                      }
+                      onImageUpload(file);
+                      option.onSuccess && option.onSuccess({});
+                    }
+                  }}
+                  disabled={disabled || uploadLimitReached}
+                >
+                  <div className={cx(styles.uploadButton, { [styles.disabledUpload]: uploadLimitReached })}>
+                    <IconUpload style={{ fontSize: '14px' }} />
+                    <span>{uploadLimitReached ? '已达上限' : '上传'}</span>
+                  </div>
+                </Upload>
+              </div>
+            )}
           </div>
         );
       default:
