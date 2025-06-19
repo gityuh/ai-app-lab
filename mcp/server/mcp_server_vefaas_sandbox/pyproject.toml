@@ -1,13 +1,15 @@
 [project]
-name = "mcp_server_ppt"
+name = "mcp-server-vefaas-sandbox"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "mcp>=1.6.0",
+]
 
 [project.scripts]
-mcp-server-ppt = "mcp_server_ppt.ppt:main"
+mcp-server-vefaas-sandbox = "mcp_server_vefaas_sandbox.server:main"
 
 [build-system]
 requires = ["hatchling"]
